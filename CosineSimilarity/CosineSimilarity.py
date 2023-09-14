@@ -50,7 +50,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 #from camel_tools.dialectid import DialectIdentifier
 #from camel_tools.sentiment import SentimentAnalyzer
 
-class CosineSimilarity:
+class CosineSimilarity(Semantic-Similarity-Arabic):
   """
     A class for processing and comparing the semantic similarity of sentences using Arabic-Camel-Bert Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
@@ -260,7 +260,7 @@ class CosineSimilarity:
     return cosine_similarity(sentence_embeddings)
 
 
-  def find_n_similar_pair(self, sentences, n):
+  def find_most_similar_pairs(self, sentences, n):
       """
 
     This finds a specified number of the most similar pairs using cosine simularity.
