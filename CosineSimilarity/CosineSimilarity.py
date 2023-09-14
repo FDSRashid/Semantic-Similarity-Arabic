@@ -42,9 +42,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class CosineSimilarity(SemanticSimilarityArabic):
   """
-    A class for processing and comparing the semantic similarity of sentences using Arabic-Camel-Bert Models.
+    A class for processing and comparing the Cosine similarity of sentences using Arabic  Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
-    Semantic Similarity done using Cosine Similarity for now.
+    
 
     Args:
         model_name (str): The name of the pretrained model to use for encoding sentences.
