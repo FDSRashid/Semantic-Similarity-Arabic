@@ -50,7 +50,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 #from camel_tools.dialectid import DialectIdentifier
 #from camel_tools.sentiment import SentimentAnalyzer
 
-class SemanticSimilarityArabic:
+class CosineSimilarity:
   """
     A class for processing and comparing the semantic similarity of sentences using Arabic-Camel-Bert Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
@@ -224,7 +224,7 @@ class SemanticSimilarityArabic:
       return np.vstack(encoded_embeddings)
 
 
-  def similarity_sentences(self, sentences):
+  def calculate_similarity_matrix(self, sentences):
     """
 
     This finds the cosine_similarity matrix of a list of sentences. Recall that the formula for Cosine Simularity is the following: Dot Product of Vectors A and B Divided by the norm of A times B
