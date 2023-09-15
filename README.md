@@ -28,6 +28,8 @@ Next, install using  the following line:
   
 Unless updated in future versions, this is how all metrics I implement will be named and organized.
 
+For a list of functions most useful to the user, navigate to the 'semanticsimilarityarabic' folder and click on the semanticarabicsimilarity.py file. In there, I've listed the functions that all the Classes must implement. These will be the most useful functions for the user. Each Class implementation has its own set of functions useful for implementing its version. Explore if you'd like!
+
 Author : Ferdaws Rashid
 
 
