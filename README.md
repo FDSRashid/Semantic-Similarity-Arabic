@@ -16,13 +16,13 @@ Then, move into the newly cloned repository using
 
 `cd Semantic-Similarity-Arabic/`
 
-Then, install using   
+Next, install using  the following line: 
 
   
   `pip install .`
 
   
-  The install will take a few minutes. Finalyy, you can import a module that uses a specific metric by importing from its respectively named folder. this example code loads the CosineSimilarity class:    
+  The install will take a few minutes. Finally, you can import a module that uses a specific metric by importing from its respectively named folder. this example code loads the CosineSimilarity class:    
   
   `from cosinesimilarity.CosineSimilarity import CosineSimilarity` .  
   
