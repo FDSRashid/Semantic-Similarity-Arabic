@@ -9,7 +9,7 @@ of the models, math, and algorithms - for now, you can consult their library doc
 How to use: First clone this repository using this line 
 
 
-`git clone https://github.com/FDSRashid/Semantic-Similarity-Arabic.git`.
+`git clone https://github.com/FDSRashid/Semantic-Similarity-Arabic.git`
 
 
 Then, move into the newly cloned repository using 
