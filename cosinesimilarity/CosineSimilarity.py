@@ -5,7 +5,7 @@
     Author: Ferdaws Rashid
     email: frashid@berkeley.edu
 """
-from ..semanticsimilarityarabic.semantic_similarity_arabic import SemanticSimilarityArabic
+from semanticsimilarityarabic.semantic_similarity_arabic import SemanticSimilarityArabic
 import numpy as np
 import torch
 import faiss
