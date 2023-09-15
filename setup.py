@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='semantic_similarity_arabic',
-    version='1.0',
+    version='1.1.1',
     author = "Ferdaws Rashid",
     packages=find_packages(),
     install_requires=[
