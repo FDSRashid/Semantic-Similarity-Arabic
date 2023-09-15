@@ -4,4 +4,3 @@ scikit-learn
 torch
 numpy
 faiss-cpu
-subprocess
