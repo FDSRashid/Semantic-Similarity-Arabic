@@ -391,6 +391,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
       encoded_sentences = self.encode_sentences(sentences)
       encoded_sentence = self.encode_sentences(sentence)
       index = faiss.IndexFlatIP(encoded_sentences.shape[1])
+      faiss.normalize_L2(encoded_sentences)
       index.add(encoded_sentences)
       encoded_sentence = encoded_sentence.reshape(1, -1).astype('float32')
       _, similar_indices = index.search(encoded_sentence, n)
