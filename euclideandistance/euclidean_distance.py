@@ -76,7 +76,11 @@ class EuclideanDistance(SemanticSimilarityArabic):
 
         find_most_similar_sentence(sentences: List[str], sentence: str) -> Tuple[str, float, int]:
             Finds the most similar sentence for a input sentence from a list of sentences.
-            returns the sentence, the similarity score, and which number of the sentence it returns
+            returns the sentence, the similarity score, and which index of the sentence it returns
+            
+        find_most_similar_sentences(sentences: List[str], sentence: str, n: int) -> Tuple[list[str], list[float], list[int]]:
+            Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
+            returns a list of sentences, the similarity scores, and which number of the sentence's it returns
 
         similarity_sentences(sentences: List[str]) ->  np.nparray :
           calculates the similarity matrix of a list of sentences, doing pre-processing as well.
