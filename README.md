@@ -5,3 +5,9 @@ work with TensorFlow objects as well.
 Pre-processing is done using the Camel-Tools library.
 This classes uses the Faiss library for optimization of comparison for encoded sentences. I will update this to have detailed descriptions
 of the models, math, and algorithms - for now, you can consult their library documentation for more details.
+
+
+Author : Ferdaws Rashid
+
+
+Email: frashid@berkeley.edu
