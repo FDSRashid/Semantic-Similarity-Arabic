@@ -24,7 +24,7 @@ Next, install using  the following line:
   
   The install will take a few minutes. Finally, you can import a module that uses a specific metric by importing from its respectively named folder. this example code loads the CosineSimilarity class:    
   
-  `from cosinesimilarity.CosineSimilarity import CosineSimilarity` .  
+  `from cosinesimilarity.cosine_similarity import CosineSimilarity` .  
   
 Unless updated in future versions, this is how all metrics I implement will be named and organized.
 
