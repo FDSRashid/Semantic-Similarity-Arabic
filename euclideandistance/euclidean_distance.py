@@ -353,7 +353,46 @@ class EuclideanDistance(SemanticSimilarityArabic):
 
 
 
+  def find_most_similar_sentences(self, sentences, sentence, n = 2):
+      """
 
+    This finds a the most similar sentence from a list of sentances. You input a sentance to co
+    compare the list to. It returns the sentence, the score, and the index of the sentence. 
+    That way you can keep track of which element it came from.
+
+
+
+        Args:
+            sentences: A List of Strings that are the sentances you wish to find the similarity for.
+            sentence: a single string that is the sentance you want to compare the list to.
+            n: the number of the most similar_sentences to return
+            
+
+        Returns:
+            most_similar_sentences, similarity_scores, most_similar_index's:  a list of string of the sentences, list of float's of the similarity scores, 
+            and list of indexes as ints
+
+        Example:
+            Example usage of encode_sentences:
+            
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> strings, scores, idxs = model.find_most_similar_sentences(list of sentences, sentence , 2)
+            >>> print(len(scores))
+            >>> 2
+            "
+        """
+      if len(sentences) < 2:
+          raise ValueError('List of Sentences needs to be at least 2!')
+      encoded_sentences = self.encode_sentences(sentences)
+      encoded_sentence = self.encode_sentences(sentence)
+      index = faiss.IndexFlatL2(encoded_sentences.shape[1])
+      index.add(encoded_sentences)
+      encoded_sentence = encoded_sentence.reshape(1, -1).astype('float32')
+      _, similar_indices = index.search(encoded_sentence, n)
+      top_similar_sentences = [sentences[idx] for idx in similar_indices[0]]
+      return top_similar_sentences , _[0], similar_indices[0]
+
+    
   def find_most_similar_pair(self, sentences):
       """
 
