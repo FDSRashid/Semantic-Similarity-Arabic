@@ -26,6 +26,10 @@ class SemanticSimilarityArabic(ABC):
     @abstractmethod
     def find_most_similar_sentence(self, sentences, target_sentence):
         pass
+        
+    @abtractmethod
+    def find_most_similar_sentences(self, sentences, target_sentence, n = 2)
+        pass
 
     @abstractmethod
     def find_most_similar_pair(self, sentences):
