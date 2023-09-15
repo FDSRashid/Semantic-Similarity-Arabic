@@ -110,7 +110,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -144,7 +144,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess_batch:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -188,7 +188,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
             >>> result = model.encode_sentences(" فَسَمِعَ رَجُلا ")
             >>> print(result.shape)
             (1, 768)
@@ -234,7 +234,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
             >>> result = model.similarity_sentences([a list of sentences with length 3])
             >>> print(result) #just a example matrix
             [[1.         0.89068115 0.877669  ]
@@ -271,7 +271,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
             >>> result = model.find_n_similar_pair(sentences, 2)
             >>> print(result)
             "[( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
@@ -332,7 +332,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
             >>> result = model.find_most_similar_sentence(sentence, list of sentences)
             >>> print(result)
             " فَسَمِعَ رَجُلا يَقْرَأُ : /4 قُلْ هُوَ اللَّهُ أَحَدٌ سورة الإخلاص آية 1 /4 ، إِلَى آخِرِهَا ، فَقَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ : "" وَجَبَتْ "" ، فَقُلْتُ : مَاذَا يَا رَسُولَ اللَّهِ ؟ ، فَقَالَ : "" الْجَنَّةُ "" ، قَالَ أَبُو هُرَيْرَةَ : فَأَرَدْتُ أَنْ أَذْهَبَ إِلَى الرَّجُلِ فَأُبَشِّرَهُ ، ثُمَّ خِفْتُ أَنْ يَفُوتَنِي الْغَدَاءُ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَآثَرْتُ الْغَدَاءَ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ ، ثُمَّ ذَهَبْتُ إِلَى الرَّجُلِ فَوَجَدْتُهُ قَدْ ذَهَبَ ,
@@ -374,7 +374,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = SemanticSimilarityArabic("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
             >>> result = model.find_most_similar_pair(sentences, 2)
             >>> print(result)
             "( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
