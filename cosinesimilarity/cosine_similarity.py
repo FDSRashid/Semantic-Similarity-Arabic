@@ -218,7 +218,9 @@ class CosineSimilarity(SemanticSimilarityArabic):
         chunk_representations = []
         for chunk in chunks:
             output = self.model(**chunk)
-            chunk_representations.append(output)
+            cls_representation = output.last_hidden_state[:, 0, :]
+            chunk_representations.append(cls_representation)
+            
         sentence_representation = torch.max(torch.stack(chunk_representations), dim=0).values
 
         # Extract the [CLS] token embeddings and detach
