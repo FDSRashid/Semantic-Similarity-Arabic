@@ -189,7 +189,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     return preprocessed_sentences
   
   def tokenize_sentence(self, sentence):
-     return self.tokenizer.tokenize(sentence)
+     return self.tokenizer.tokenize(simple_word_tokenize(sentence))
 
   def jaccard_similarity(self, encoded_sentence1, encoded_sentence2):
      set1 = set(encoded_sentence1)
