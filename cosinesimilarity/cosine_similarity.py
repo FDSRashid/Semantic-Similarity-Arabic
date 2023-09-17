@@ -213,11 +213,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
         max_seq_length = self.tokenizer.model_max_length
         chunks = []
         for j in range(0, tokenized_sentence['input_ids'].shape[1], max_seq_length):
-        chunk = {
+            chunk = {
             'input_ids': tokenized_sentence['input_ids'][:, j:j+max_seq_length],
             'attention_mask': tokenized_sentence['attention_mask'][:, j:j+max_seq_length],
             'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+max_seq_length]  # Include token_type_ids
-        }
+             }
         chunks.append(chunk)
         chunk_representations = []
         for chunk in chunks:
