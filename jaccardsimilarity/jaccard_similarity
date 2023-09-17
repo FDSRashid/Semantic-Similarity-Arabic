@@ -9,6 +9,7 @@ from semanticsimilarityarabic.semantic_similarity_arabic import SemanticSimilari
 import numpy as np
 import torch
 import faiss
+import os
 
 
 from camel_tools.utils.charmap import CharMapper
@@ -28,10 +29,10 @@ from transformers import AutoTokenizer, AutoModel
 #from camel_tools.morphology.database import MorphologyDB
 #from camel_tools.morphology.generator import Generator
 
-#from camel_tools.tokenizers.word import simple_word_tokenize
-#from camel_tools.disambig.mle import MLEDisambiguator
+from camel_tools.tokenizers.word import simple_word_tokenize
+from camel_tools.disambig.mle import MLEDisambiguator
 
-#from camel_tools.tokenizers.morphological import MorphologicalTokenizer
+from camel_tools.tokenizers.morphological import MorphologicalTokenizer
 
 
 #from camel_tools.tagger.default import DefaultTagger
@@ -39,15 +40,26 @@ from transformers import AutoTokenizer, AutoModel
 #from camel_tools.dialectid import DialectIdentifier
 #from camel_tools.sentiment import SentimentAnalyzer
 
-class EuclideanDistance(SemanticSimilarityArabic):
+class JaccardSimilarity(SemanticSimilarityArabic):
   """
-    A class for processing and comparing the Cosine similarity of sentences using Arabic  Models.
+    A class for processing and comparing the Jaccard similarity of sentences using Arabic  Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
+
+
+    VERY IMPORTANT: DOWNLOAD CAMEL TOOLS DATA FROM CAMEL TOOLS AND SET A ENVIRONMENTAL VARIABLE
+    LIKE THIS os.environ['CAMELTOOLS_DATA'] = location of camel_tools folder
+    THis is for the tokenization function I use in this class. this class will not instantiate 
+    unless you have this environment variable. Consult https://github.com/CAMeL-Lab/camel_tools 
+    For specific instructions. Note, Google Colab has slightly different instructions. Check this link
+    for the instructions there https://colab.research.google.com/drive/1Y3qCbD6Gw1KEw-lixQx1rI6WlyWnrnDS?usp=sharing .
     
 
     Args:
         model_name (str): The name of the pretrained model to use for encoding sentences.
         batch_size (int) = 10 : the size of the batches you want to process data by. depends on your computational power, and can be increased
+        scheme (str)  = 'd3tok': The tokenization scheme for the model. This is a list of all the schemes: ['d2tok', 'atbtok', 'd3seg', 'bwtok', 'atbseg', 'd3tok', 'd2seg', 'd1seg', 'd1tok']
+        splits (bool) = True : wether you want the tokens as separate strings.
+        diac (bool) = True : wether you want diacritized tokens or not
     Dependencies:
       -transformers
       -Camel-tools
@@ -66,7 +78,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
             Encodes a batch of sentences into a fixed-size embedding.
 
         calculate_similarity(embedding1: np.ndarray, embedding2: np.ndarray) -> float:
-            Calculates the cosine similarity between two sentence embeddings.
+            Calculates the Jaccard similarity between two sentence embeddings.
 
         find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
             Finds the two most similar sentences from a list of sentences.
@@ -88,10 +100,12 @@ class EuclideanDistance(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, model_name, batch_size = 10):
+  def __init__(self, model_name,  schemes='d3tok', batch_size = 10, splits = True, diacs = False):
+    if 'CAMELTOOLS_DATA' not in os.environ:
+       raise ValueError('CAMELTOOLS_DATA is not set. Please follow documentation instructions to download data and set environmental variable')
     try:
-      self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-      self.model = AutoModel.from_pretrained(model_name)
+      self.mle = MLEDisambiguator.pretrained(model_name)
+      self.tokenizer = MorphologicalTokenizer(self.mle, scheme=schemes, split = splits, diac = diacs )
       self.batch_size = batch_size
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
@@ -173,57 +187,29 @@ class EuclideanDistance(SemanticSimilarityArabic):
       preprocessed_sentences.extend(preprocessed_batch)
 
     return preprocessed_sentences
+  
+  def tokenize_sentence(self, sentence):
+     return self.tokenizer.tokenize(sentence)
 
-  def encode_sentences(self, sentences):
-        # Preprocess all sentences in a batch
-      """
-        Encodes a Sentence or List of Sentences uses the Pre-Trained Model defined by the Class Instantiation. For example, you can put 'Camel-Bert' as the model you want to use 
-        and it will use their model. Please consult the source of the model you are using - this class assumes that the model will return features in PyTorch. To learn more about Hosted
-        Large Language Models, consult https://huggingface.co And look at examples on how to use a tokenizer. This Class uses a AutoTokenizer to encode sentences. 
+  def jaccard_similarity(self, encoded_sentence1, encoded_sentence2):
+     set1 = set(encoded_sentence1)
+     set2 = set(encoded_sentence2)
+     #make sets from the tokenized sentences
 
-        Args:
-            sentence: A single String of List of Strings that are the sentances you wish to encode.
-            
+     intersection = len(set1.intersection(set2))
+     union = len(set1.union(set2))
+     similarity = intersection / union
+     return similarity
 
-        Returns:
-            sentence numpy.nparray : A numpy array representing the sentence encoded . Note Bert returns one encoded sentence as a 1 by 768 shape.
-
-        Example:
-            Example usage of encode_sentences:
-            
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
-            >>> result = model.encode_sentences(" فَسَمِعَ رَجُلا ")
-            >>> print(result.shape)
-            (1, 768)
-        """  
-      if not isinstance(sentences, list):
-        # If a single sentence is provided, wrap it in a list for consistency
-        sentences = [sentences]
-    
-      
-      batch_size = self.batch_size
-      encoded_embeddings = []
-      for i in range(0, len(sentences), batch_size):
-        batch = sentences[i:i + batch_size]
-        preprocessed_sentences = self.preprocess_batch(batch)
-
-        # Tokenize and obtain embeddings for the batch
-        inputs = self.tokenizer(preprocessed_sentences, return_tensors="pt", padding=True)
-        output = self.model(**inputs)
-
-        # Extract the [CLS] token embeddings and detach
-        embeddings = np.ascontiguousarray(output.last_hidden_state[:, 0, :].detach().numpy())
-        encoded_embeddings.extend(embeddings)
-      return np.vstack(encoded_embeddings)
 
 
   def calculate_similarity_matrix(self, sentences):
     """
 
-    This finds the Euclidean Distance matrix of a list of sentences. The Euclidean Distance is the norm of the difference between two vectors.
-    Since Our sentences are converted to a vector of numbers, we can use euclidean distance. The bigger the number, the more distant the vectors.
+    This finds the Jaccard Similarity matrix of a list of sentences. Jaccardian Similarity is defined by the size of the intersection of two sets divided by the size
+    of the union of two sets.The closer the score is to 1, the more similar the sentence
     To find the similarity between the i'th and j'th sentence, select the matrix at element (i, j). Diagonal elements are the same sentences,
-    so will always have 0.   
+    so will always have 1.   
 
         Args:
             sentence: A List of Strings that are the sentances you wish to find the similarity for.
@@ -236,7 +222,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
             Example usage of calculate_similarity_matrix:
             
             >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
-            >>> result = model.similarity_sentences([a list of sentences with length 3])
+            >>> result = model.calculate_similarity_matrix([a list of sentences with length 3])
             >>> print(result) #just a example matrix
             [[ 0.          5.19615242 10.39230485]
             [ 5.19615242  0.          5.19615242]
@@ -248,16 +234,23 @@ class EuclideanDistance(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence_embeddings = self.encode_sentences(sentences)
-    pairwise_differences = sentence_embeddings[:, np.newaxis] - sentence_embeddings
-    distance_matrix = np.linalg.norm(pairwise_differences, axis=2)
-    return distance_matrix
+    num_sentences = len(sentences)
+    sentences = self.preprocess_batch(sentences)
+    sentences = [self.tokenize_sentence(i) for i in sentences]
+    similarity_matrix = np.zeros((num_sentences, num_sentences))
+    for i in range(num_sentences):
+        for j in range(num_sentences):
+            if i == j:
+                similarity_matrix[i][j] = 1.0  # Similarity of a sentence with itself is 1
+            else:
+                similarity_matrix[i][j] = self.jaccard_similarity(sentences[i], sentences[j])
+    return similarity_matrix
 
 
   def find_most_similar_pairs(self, sentences, n):
       """
 
-    This finds a specified number of the most similar pairs using Euclidean Distance.
+    This finds a specified number of the most similar pairs using Jaccardian Distance.
     This uses the Faiss Library to optimize the speed and memory usage to find the most similar sentences
     For more information on the Faiss library, consult this : https://github.com/facebookresearch/faiss
 
@@ -268,7 +261,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
             
 
         Returns:
-          list [Tuple[string, string, float]] : a list of the sentences, and the similarity score between them.
+           list[Tuple[string,string,float]] : a list of the sentences, and the similarity score between them.
               
             
 
@@ -288,32 +281,26 @@ class EuclideanDistance(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.encode_sentences(sentences)
+      similarity_matrix = self.calculate_similarity_matrix(sentences)
+      num_sentences = len(sentences)
 
-        # Calculate pairwise similarities
-      index = faiss.IndexFlatL2(sentence_embeddings.shape[1])  # Use Euclidean Distance
+        # Flatten the upper triangular part of the matrix (excluding the diagonal)
+      flat_similarity_scores = similarity_matrix[np.triu_indices(num_sentences, k=1)] # Use Euclidean Distance
       
 
-        # Add sentence embeddings to the index
-      index.add(sentence_embeddings.astype('float32'))
+      # Sort the similarity scores in descending order and get the indices
+      sorted_indices = np.argsort(flat_similarity_scores)[::-1]
+      top_n_indices = sorted_indices[:n]
 
-        # Find the two most similar sentences
-      k = 2  # Number of similar sentences to retrieve
-      D, I = index.search(sentence_embeddings.astype('float32'), k)
-      most_similar_pairs = []
-      for i in range(len(sentences)):
-        similar_indices = I[i]
-        similarity_scores = D[i]
-        for j in range(1, k):
-          similar_idx = similar_indices[j]
-          similarity_score = similarity_scores[j]
-          most_similar_pairs.append((sentences[i], sentences[similar_idx], similarity_score))
 
-        # Find the pair with the smallest similarity score
-        #to retrieve top n pairs, use sort() instead of max() and grab the last n elements
-      most_similar_pairs = sorted(most_similar_pairs, key=lambda x: x[2])
+      top_n_scores = [flat_similarity_scores[idx] for idx in top_n_indices]
+      top_n_pairs = []
+      for idx in top_n_indices:
+         i, j = np.unravel_index(idx, (num_sentences, num_sentences))
+         top_n_pairs.append((sentences[i], sentences[j], top_n_scores[idx]))
 
-      return most_similar_pairs[-n:]
+      
+      return top_n_pairs
 
   def find_most_similar_sentence(self, sentences, sentence):
 
@@ -347,13 +334,16 @@ class EuclideanDistance(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentences_embeddings = self.encode_sentences(sentences)
-    sentence_embedding = self.encode_sentences(sentence).astype('float32')
-    index = faiss.IndexFlatL2(sentences_embeddings.shape[1])
-    index.add(sentences_embeddings.astype('float32'))
-    k = 1  # Find the single closest neighbor
-    distances, neighbors = index.search(np.array(sentence_embedding, dtype=np.float32), k)
-    return sentences[neighbors[0][0]], distances[0][0], neighbors[0][0]
+    sentence = self.preprocess(sentence)
+    sentences = self.preprocess_batch(sentences)
+    
+
+    # Calculate Jaccard similarity between input sentence and all sentences in the list
+    similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences]
+    most_similar_index = np.argmax(similarity_scores)
+    most_similar_score = similarity_scores[most_similar_index]
+
+    return (sentences[most_similar_index], most_similar_score, most_similar_index)
 
 
 
@@ -387,14 +377,16 @@ class EuclideanDistance(SemanticSimilarityArabic):
         """
       if len(sentences) < 2:
           raise ValueError('List of Sentences needs to be at least 2!')
-      encoded_sentences = self.encode_sentences(sentences)
-      encoded_sentence = self.encode_sentences(sentence)
-      index = faiss.IndexFlatL2(encoded_sentences.shape[1])
-      index.add(encoded_sentences)
-      encoded_sentence = encoded_sentence.reshape(1, -1).astype('float32')
-      _, similar_indices = index.search(encoded_sentence, n)
-      top_similar_sentences = [sentences[idx] for idx in similar_indices[0]]
-      return top_similar_sentences , _[0], similar_indices[0]
+      sentence = self.preprocess(sentence)
+      sentences = self.preprocess_batch(sentences)
+      similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences]
+      top_n_indices = np.argpartition(similarity_scores, n)[-n:]
+      top_n_scores = [similarity_scores[idx] for idx in top_n_indices]
+
+    # Retrieve the top n most similar sentences
+      top_n_sentences = [sentences[idx] for idx in top_n_indices]
+      
+      return top_n_sentences, top_n_scores, top_n_indices
 
     
   def find_most_similar_pair(self, sentences):
@@ -425,34 +417,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
   0.61238515,
  )"
         """ 
-      if not isinstance(sentences, list) or len(sentences) < 2:
-        raise ValueError("Input must be a list of at least two sentences")
+      
 
-        # Preprocess and encode all sentences
-      sentence_embeddings = self.encode_sentences(sentences)
-
-        # Calculate pairwise similarities
-      index = faiss.IndexFlatL2(sentence_embeddings.shape[1])  #L2 distance
-   
-
-        # Add sentence embeddings to the index
-      index.add(sentence_embeddings.astype('float32'))
-
-        # Find the two most similar sentences
-      k = 2  # Number of similar sentences to retrieve
-      D, I = index.search(sentence_embeddings.astype('float32'), k)
-      most_similar_pairs = []
-      for i in range(len(sentences)):
-        similar_indices = I[i]
-        similarity_scores = D[i]
-        for j in range(1, k):
-          similar_idx = similar_indices[j]
-          similarity_score = similarity_scores[j]
-          most_similar_pairs.append((sentences[i], sentences[similar_idx], similarity_score))
-
-        # Find the pair with the highest similarity score
-        #to retrieve top n pairs, use sorted() instead of max() and grab the last n elements
-      most_similar_pair = min(most_similar_pairs, key=lambda x: x[2])
-
-      return most_similar_pair
+      return self.find_most_similar_pairs(sentences, 1)
 

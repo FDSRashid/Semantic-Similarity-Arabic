@@ -163,7 +163,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
     for i in range(0, len(sentences), self.batch_size):
       batch = sentences[i:i + self.batch_size]
      # Combine the sentences with 'fin' separator
-      combined_sentences = ' fin '.join(sentences)
+      combined_sentences = ' fin '.join(batch)
 
       # Preprocess the combined string
       preprocessed_text = self.preprocess(combined_sentences)
