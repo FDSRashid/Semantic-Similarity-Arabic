@@ -16,6 +16,8 @@ Then, move into the newly cloned repository using
 
 `cd Semantic-Similarity-Arabic/`
 
+Note: for Google Colab Users preface with % 
+
 Next, install using  the following line: 
 
   
