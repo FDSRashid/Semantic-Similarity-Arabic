@@ -207,7 +207,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
       preprocessed_sentences = self.preprocess_batch(sentences)
       encoded_embdeddings = []
       for sentence in preprocessed_sentences:
-          tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True, truncation = True)
+          tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True, max_length = 512, truncation = True)
           if self.gpu:
               tokenized_sentence = tokenized_sentence.to('cuda')
           output = self.model(**tokenized_sentence)
