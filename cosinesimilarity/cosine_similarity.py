@@ -217,7 +217,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             chunks.append(chunk)
         chunk_representations = []
         for chunk in chunks:
-            output = model(**chunk)
+            output = self.model(**chunk)
             chunk_representations.append(output)
         sentence_representation = torch.max(torch.stack(chunk_representations), dim=0).values
 
