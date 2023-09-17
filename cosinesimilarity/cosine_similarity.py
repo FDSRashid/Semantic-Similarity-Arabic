@@ -218,7 +218,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             'attention_mask': tokenized_sentence['attention_mask'][:, j:j+max_seq_length],
             'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+max_seq_length]  # Include token_type_ids
              }
-        chunks.append(chunk)
+            chunks.append(chunk)
         chunk_representations = []
         for chunk in chunks:
             output = self.model(**chunk)
