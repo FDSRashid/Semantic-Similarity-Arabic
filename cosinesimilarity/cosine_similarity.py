@@ -205,7 +205,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
-      encoded_embdeddings = []
+      encoded_embeddings = []
       for sentence in preprocessed_sentences:
           tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True, max_length = 512, truncation = True)
           if self.gpu:
