@@ -236,8 +236,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
             output = self.model(**chunk)
             cls_representation = output.last_hidden_state[:, 0, :]
             chunk_representations.append(cls_representation)
-            
-        sentence_representation = torch.max(torch.stack(chunk_representations), dim=0).values
+
+        chunk_representations_cpu = [tensor.to('cpu') for tensor in chunk_representations]
+        # Stack the chunk_representations on the CPU
+        sentence_representation = torch.max(torch.stack(chunk_representations_cpu), dim=0).values
         sentence_representation = sentence_representation.to('cpu')
 
         # Extract the [CLS] token embeddings and detach
