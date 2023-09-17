@@ -36,7 +36,10 @@ Important Node: I am intending to implement a class that requires datasets from 
 pertaining to downloading the dataset I can't help with. Note there is different insructions for using the dataset on desktop and on google colab. Consult : https://github.com/CAMeL-Lab/camel_tools#installing-data for all the needed information
 
 Update : I've added a shell script that does the downloading the camel-tools dataset downloading for you. All you have to do
-is specify where you want the 'camel_tools' folder to be, in . To run it, after cloning and pip installing, run the following line of shell : `./run_camel_data.sh` . This code will use the current working directory to place_camel_tools. Keep in mind this is downloading data, if you dont want to repeat downloading the same data and wasting space just set the environment variable to the location where you first downloadeded camel_tools. Instructions are better shown on the camel_tools documentation so i strongly recomend going there.
+is specify where you want the 'camel_tools' folder to be, in . To run it, after cloning and pip installing, run the following line of shell : `./run_camel_data.sh` . This code will use the current working directory to place_camel_tools. If you want to specifiy a different location, run this instead : `./run_camel_data.sh /custom/path/to/datasets` . Remember to change the custom/path bit to your own location.
+
+
+Keep in mind this is downloading data, if you dont want to repeat downloading the same data and wasting space just set the environment variable to the location where you first downloadeded camel_tools. Instructions are better shown on the camel_tools documentation so i strongly recomend going there.
 
 Author : Ferdaws Rashid
 
