@@ -209,11 +209,20 @@ class CosineSimilarity(SemanticSimilarityArabic):
         preprocessed_sentences = self.preprocess_batch(batch)
 
         # Tokenize and obtain embeddings for the batch
-        inputs = self.tokenizer(preprocessed_sentences, return_tensors="pt", padding=True)
-        output = self.model(**inputs)
+        tokenized_sentence = self.tokenizer(preprocessed_sentences, return_tensors="pt", padding=True)
+        max_seq_length = self.tokenizer.model_max_length
+        chunks = []
+        for i in range(0, tokenized_sentence['input_ids'].shape[1], max_seq_length):
+            chunk = { 'input_ids': tokenized_sentence['input_ids'][:, i:i+max_seq_length],'attention_mask': tokenized_sentence['attention_mask'][:, i:i+max_seq_length]}
+            chunks.append(chunk)
+        chunk_representations = []
+        for chunk in chunks:
+            output = model(**chunk)
+            chunk_representations.append(output)
+        sentence_representation = torch.max(torch.stack(chunk_representations), dim=0).values
 
         # Extract the [CLS] token embeddings and detach
-        embeddings = np.ascontiguousarray(output.last_hidden_state[:, 0, :].detach().numpy())
+        embeddings = np.ascontiguousarray(sentence_representation.last_hidden_state[:, 0, :].detach().numpy())
         encoded_embeddings.extend(embeddings)
       return np.vstack(encoded_embeddings)
 
