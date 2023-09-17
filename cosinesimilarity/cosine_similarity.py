@@ -217,7 +217,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         # Convert to NumPy array and append to embeddings list
           
           encoded_embeddings.append(cls_representation)
-          return encoded_embeddinggs
+          return encoded_embeddings
         
           
           
