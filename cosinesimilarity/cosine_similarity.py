@@ -215,14 +215,20 @@ class CosineSimilarity(SemanticSimilarityArabic):
           cls_representation = cls_representation.to('cpu')
 
         # Convert to NumPy array and append to embeddings list
+          
+          encoded_embeddings.append(cls_representation)
+          return encoded_embeddinggs
+        
+          
+          
+            
+            
+  def preprocess_for_faiss(encoded_embeddings):
+      embed_processed = []
+      for embeddings in encoded_embeddings:
           embeddings = np.ascontiguousarray(cls_representation.detach().numpy())
-          encoded_embeddings.append(embeddings)
-          return np.vstack(encoded_embeddings)
-          
-          
-            
-            
-
+          embed_processed.append(embeddings)
+      return np.vstack(embed_processed)
   def calculate_similarity_matrix(self, sentences):
     """
 
@@ -293,7 +299,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.encode_sentences(sentences)
+      sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
 
         # Calculate pairwise similarities
       index = faiss.IndexFlatIP(sentence_embeddings.shape[1])  # Use inner product (cosine similarity)
@@ -393,8 +399,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
         """
       if len(sentences) < 2:
           raise ValueError('List of Sentences needs to be at least 2!')
-      encoded_sentences = self.encode_sentences(sentences)
-      encoded_sentence = self.encode_sentences(sentence)
+      encoded_sentences = self.preprocess_for_faiss(self.encode_sentences(sentences))
+      encoded_sentence = self.preprocess_for_faiss(self.encode_sentences(sentence)) 
       index = faiss.IndexFlatIP(encoded_sentences.shape[1])
       faiss.normalize_L2(encoded_sentences)
       index.add(encoded_sentences)
