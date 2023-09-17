@@ -223,10 +223,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
           
             
             
-  def preprocess_for_faiss(encoded_embeddings):
+  def preprocess_for_faiss(self, encoded_embeddings):
       embed_processed = []
       for embeddings in encoded_embeddings:
-          embeddings = np.ascontiguousarray(cls_representation.detach().numpy())
+          embeddings = np.ascontiguousarray(embeddings.detach().numpy())
           embed_processed.append(embeddings)
       return np.vstack(embed_processed)
   def calculate_similarity_matrix(self, sentences):
@@ -261,7 +261,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence_embeddings = self.encode_sentences(sentences)
+    sentence_embeddings = np.vstack(self.encode_sentences(sentences))
     return cosine_similarity(sentence_embeddings)
 
 
@@ -358,7 +358,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentences_embeddings = self.encode_sentences(sentences)
+    sentences_embeddings = np.vstack(self.encode_sentences(sentences))
     sentence_embedding = self.encode_sentences(sentence)
     similarities = cosine_similarity(sentence_embedding, sentences_embeddings)[0]
     most_similar_index = np.argmax(similarities)
@@ -441,7 +441,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.encode_sentences(sentences)
+      sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
 
         # Calculate pairwise similarities
       index = faiss.IndexFlatIP(sentence_embeddings.shape[1])  # Use inner product (cosine similarity)
