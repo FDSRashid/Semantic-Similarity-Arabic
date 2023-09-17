@@ -89,11 +89,14 @@ class CosineSimilarity(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, model_name, batch_size = 10):
+  def __init__(self, model_name, batch_size = 10, gpu = False):
     try:
       self.tokenizer = AutoTokenizer.from_pretrained(model_name)
       self.model = AutoModel.from_pretrained(model_name)
       self.batch_size = batch_size
+      self.gpu = gpu
+      if self.gpu:
+          self.model.to('cuda')
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
   def preprocess(self, sentence):
@@ -212,14 +215,22 @@ class CosineSimilarity(SemanticSimilarityArabic):
         tokenized_sentence = self.tokenizer(preprocessed_sentences, return_tensors="pt", padding=True)
         max_seq_length = self.tokenizer.model_max_length
         chunks = []
-         for j in range(0, tokenized_sentence['input_ids'].shape[1]):
-             if j % max_seq_length == 0 and j != 0:
-                 chunks.append(chunk)
-             chunk = {
-            'input_ids': tokenized_sentence['input_ids'][:, j:j+1],
-            'attention_mask': tokenized_sentence['attention_mask'][:, j:j+1],
-            'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+1]  # Include token_type_ids}
-            chunks.append(chunk)
+        for j in range(0, tokenized_sentence['input_ids'].shape[1]):
+            
+            if self.gpu:
+                chunk = {
+                'input_ids': tokenized_sentence['input_ids'][:, j:j+1].to('cuda'),
+                'attention_mask': tokenized_sentence['attention_mask'][:, j:j+1].to('cuda'),
+                'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+1].to('cuda')}
+                # Include token_type_ids}
+            else: 
+                chunk =  {
+                'input_ids': tokenized_sentence['input_ids'][:, j:j+1],
+                'attention_mask': tokenized_sentence['attention_mask'][:, j:j+1],
+                'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+1]}
+                                                            
+            if j % max_seq_length == 0 and j != 0:
+                chunks.append(chunk)
         chunk_representations = []
         for chunk in chunks:
             output = self.model(**chunk)
@@ -227,6 +238,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             chunk_representations.append(cls_representation)
             
         sentence_representation = torch.max(torch.stack(chunk_representations), dim=0).values
+        sentence_representation = sentence_representation.to('cpu')
 
         # Extract the [CLS] token embeddings and detach
         embeddings = np.ascontiguousarray(sentence_representation.detach().numpy())
