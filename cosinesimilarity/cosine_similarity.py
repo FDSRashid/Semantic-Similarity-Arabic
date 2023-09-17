@@ -224,7 +224,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         sentence_representation = torch.max(torch.stack(chunk_representations), dim=0).values
 
         # Extract the [CLS] token embeddings and detach
-        embeddings = np.ascontiguousarray(sentence_representation.last_hidden_state[:, 0, :].detach().numpy())
+        embeddings = np.ascontiguousarray(sentence_representation.detach().numpy())
         encoded_embeddings.extend(embeddings)
       return np.vstack(encoded_embeddings)
 
