@@ -244,11 +244,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
             sentence_representation = torch.max(torch.stack(non_empty_chunk_representations), dim=0).values
             sentence_representation = sentence_representation.to('cpu')
 
-        # Extract the [CLS] token embeddings and detach
+                # Extract the [CLS] token embeddings and detach
             embeddings = np.ascontiguousarray(sentence_representation.detach().numpy())
             encoded_embeddings.extend(embeddings)
-      return np.vstack(encoded_embeddings)
-
+      return encoded_embeddings
 
   def calculate_similarity_matrix(self, sentences):
     """
