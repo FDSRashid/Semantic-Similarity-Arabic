@@ -203,51 +203,25 @@ class CosineSimilarity(SemanticSimilarityArabic):
       if not isinstance(sentences, list):
         # If a single sentence is provided, wrap it in a list for consistency
         sentences = [sentences]
-    
-      
-      batch_size = self.batch_size
-      encoded_embeddings = []
-      for i in range(0, len(sentences), batch_size):
-        batch = sentences[i:i + batch_size]
-        preprocessed_sentences = self.preprocess_batch(batch)
+          
+      preprocessed_sentences = self.preprocess_batch(sentences)
+      encoded_embdeddings = []
+      for sentence in preprocessed_sentences:
+          tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True, truncation = True)
+          if self.gpu:
+              tokenized_sentence = tokenized_sentence.to('cuda')
+          output = self.model(**tokenized_sentence)
+          cls_representation = output.last_hidden_state[:, 0, :]
+          cls_representation = cls_representation.to('cpu')
 
-        # Tokenize and obtain embeddings for the batch
-        tokenized_sentence = self.tokenizer(preprocessed_sentences, return_tensors="pt", padding=True)
-        max_seq_length = self.tokenizer.model_max_length
-        chunks = []
-        for j in range(0, tokenized_sentence['input_ids'].shape[1]):
+        # Convert to NumPy array and append to embeddings list
+          embeddings = np.ascontiguousarray(cls_representation.detach().numpy())
+          encoded_embeddings.append(embeddings)
+          return np.vstack(encoded_embeddings)
+          
+          
             
-            if self.gpu:
-                chunk = {
-                'input_ids': tokenized_sentence['input_ids'][:, j:j+1].to('cuda'),
-                'attention_mask': tokenized_sentence['attention_mask'][:, j:j+1].to('cuda'),
-                'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+1].to('cuda')}
-                # Include token_type_ids}
-            else: 
-                chunk =  {
-                'input_ids': tokenized_sentence['input_ids'][:, j:j+1],
-                'attention_mask': tokenized_sentence['attention_mask'][:, j:j+1],
-                'token_type_ids': tokenized_sentence['token_type_ids'][:, j:j+1]}
-                                                            
-            if j % max_seq_length == 0 and j != 0:
-                chunks.append(chunk)
-        chunk_representations = []
-        for chunk in chunks:
-            output = self.model(**chunk)
-            cls_representation = output.last_hidden_state[:, 0, :]
-            chunk_representations.append(cls_representation)
-
-        non_empty_chunk_representations = [tensor for tensor in chunk_representations if tensor.numel() > 0]
-    
-        if non_empty_chunk_representations:
-        # Stack the non-empty chunk_representations on the CPU
-            sentence_representation = torch.max(torch.stack(non_empty_chunk_representations), dim=0).values
-            sentence_representation = sentence_representation.to('cpu')
-
-                # Extract the [CLS] token embeddings and detach
-            embeddings = np.ascontiguousarray(sentence_representation.detach().numpy())
-            encoded_embeddings.extend(embeddings)
-      return encoded_embeddings
+            
 
   def calculate_similarity_matrix(self, sentences):
     """
