@@ -46,10 +46,25 @@ class CosineSimilarity(SemanticSimilarityArabic):
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
     Important: This class uses a autotokenizer to process sentences. To instantiate a instance of this class,
     you need a string to the pretrained model. One example is 'CAMeL-Lab/bert-base-arabic-camelbert-ca' There are plenty of others on hugging face.
-
+    Important note, if you choose not to truncate, please specify the max_length of the model. this code will not work unless you do so.
     Args:
         model_name (str): The name of the pretrained model to use for encoding sentences.
         batch_size (int) = 10 : the size of the batches you want to process data by. depends on your computational power, and can be increased
+        gpu (bool): wether you have a gpu or not. If so, it will send the model to the gpu to handle the more intensive work
+        tokenizer_args (dict, optional): Additional arguments for the tokenizer.
+            These arguments will be passed to the tokenizer during initialization.
+            For a list of possible tokenizer arguments, refer to the Hugging Face Transformers documentation.
+        model_args (dict, optional): Additional arguments for the model.
+            These arguments will be passed to the model during initialization.
+            For a list of possible model arguments, refer to the Hugging Face Transformers documentation.
+    
+    Example:
+      >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca",
+       tokenizer_args={"max_length": 512},
+        ...     model_args={"num_labels": 2})
+      
+
+
     Dependencies:
       -transformers
       -Camel-tools
@@ -67,13 +82,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
         encode_sentences(sentence: List[str]) -> List[torch.Tensor]:
             Encodes a  list of sentences to a embeding. returns a list of respective tensors. be careful how its used. 
 
-        calculate_similarity(embedding1: np.ndarray, embedding2: np.ndarray) -> float:
-            Calculates the cosine similarity between two sentence embeddings.
-
         find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
             Finds the two most similar sentences from a list of sentences.
 
-        find_n_similar_pair(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
+        find_most_similar_pairs(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
             Finds the n most similar sentences from a list of sentences.
 
         find_most_similar_sentence(sentences: List[str], sentence: str) -> Tuple[str, float, int]:
@@ -94,10 +106,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, model_name, batch_size = 10, gpu = False):
+  def __init__(self, model_name, batch_size = 10, gpu = False, tokenizer_args=None, model_args=None):
     try:
-      self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-      self.model = AutoModel.from_pretrained(model_name)
+      self.tokenizer = AutoTokenizer.from_pretrained(model_name,  **(tokenizer_args or {}))
+      self.model = AutoModel.from_pretrained(model_name, **(model_args or {}))
       self.batch_size = batch_size
       self.gpu = gpu
       if self.gpu:
@@ -156,7 +168,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess_batch:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -200,7 +212,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.encode_sentences(" فَسَمِعَ رَجُلا ")
             >>> print(result.shape)
             (1, 768)
@@ -210,7 +222,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
-      max_sequence_length = 512 #normal for bert models- camel tools did not specify, unfortunate
+      max_sequence_length = self.tokenizer.max_length 
 
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
@@ -264,7 +276,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
   def preprocess_for_faiss(self, encoded_embeddings):
     """
     detaches each element, converts each element to numpy array.  then it converts to a C-contiguous array. finally, it stacks all the elements vertically using np.vstack    
-    this is done so that the encoded sentences are compatible for faiss algorithms. it also is made conpatible with sklearn cosine similarity functions
+    this is done so that the encoded sentences are compatible for faiss algorithms. it also is made compatible with sklearn cosine similarity functions
       Args: 
         encoded_embeddings : a list of torch.Tensors which are the encoded sentences.
       Returns:
@@ -298,7 +310,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.similarity_sentences([a list of sentences with length 3])
             >>> print(result) #just a example matrix
             [[1.         0.89068115 0.877669  ]
@@ -335,7 +347,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.find_n_similar_pair(sentences, 2)
             >>> print(result)
             "[( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
@@ -396,7 +408,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.find_most_similar_sentence(sentence, list of sentences)
             >>> print(result)
             " فَسَمِعَ رَجُلا يَقْرَأُ : /4 قُلْ هُوَ اللَّهُ أَحَدٌ سورة الإخلاص آية 1 /4 ، إِلَى آخِرِهَا ، فَقَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ : "" وَجَبَتْ "" ، فَقُلْتُ : مَاذَا يَا رَسُولَ اللَّهِ ؟ ، فَقَالَ : "" الْجَنَّةُ "" ، قَالَ أَبُو هُرَيْرَةَ : فَأَرَدْتُ أَنْ أَذْهَبَ إِلَى الرَّجُلِ فَأُبَشِّرَهُ ، ثُمَّ خِفْتُ أَنْ يَفُوتَنِي الْغَدَاءُ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَآثَرْتُ الْغَدَاءَ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ ، ثُمَّ ذَهَبْتُ إِلَى الرَّجُلِ فَوَجَدْتُهُ قَدْ ذَهَبَ ,
@@ -440,7 +452,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> strings, scores, idxs = model.find_most_similar_sentences(list of sentences, sentence , 2)
             >>> print(len(scores))
             >>> 2
@@ -478,7 +490,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.find_most_similar_pair(sentences, 2)
             >>> print(result)
             "( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,

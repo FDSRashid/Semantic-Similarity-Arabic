@@ -45,11 +45,24 @@ class EuclideanDistance(SemanticSimilarityArabic):
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
     Important: This class uses a autotokenizer to process sentences. To instantiate a instance of this class,
     you need a string to the pretrained model. One example is 'CAMeL-Lab/bert-base-arabic-camelbert-ca' There are plenty of others on hugging face.
-    
+    Important note, if you choose not to truncate, please specify the max_length of the model. this code will not work unless you do so.
 
     Args:
         model_name (str): The name of the pretrained model to use for encoding sentences.
         batch_size (int) = 10 : the size of the batches you want to process data by. depends on your computational power, and can be increased
+        gpu (bool): wether you have a gpu or not. If True, it will send the model to the gpu to handle the more intensive work
+        tokenizer_args (dict, optional): Additional arguments for the tokenizer.
+            These arguments will be passed to the tokenizer during initialization.
+            For a list of possible tokenizer arguments, refer to the Hugging Face Transformers documentation.
+        model_args (dict, optional): Additional arguments for the model.
+            These arguments will be passed to the model during initialization.
+            For a list of possible model arguments, refer to the Hugging Face Transformers documentation.
+
+    Example:
+      >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca",
+       tokenizer_args={"max_length": 128},
+        ...     model_args={"num_labels": 2})
+    
     Dependencies:
       -transformers
       -Camel-tools
@@ -70,14 +83,11 @@ class EuclideanDistance(SemanticSimilarityArabic):
         preprocess_for_faiss(embedded_sentences: List[torch.Tensor]) -> np.ndarray
             make a C-contiguous array of encoded sentences for similarity calculations
 
-        calculate_similarity(embedding1: np.ndarray, embedding2: np.ndarray) -> float:
-            Calculates the cosine similarity between two sentence embeddings.
-
         find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
             Finds the two most similar sentences from a list of sentences.
 
-        find_n_similar_pair(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
-            Finds the n most similar sentences from a list of sentences.
+        find_most_similar_pairs(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
+            Finds the n most similar pairs of sentences from a list of sentences.
 
         find_most_similar_sentence(sentences: List[str], sentence: str) -> Tuple[str, float, int]:
             Finds the most similar sentence for a input sentence from a list of sentences.
@@ -93,11 +103,14 @@ class EuclideanDistance(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, model_name, batch_size = 10):
+  def __init__(self, model_name, batch_size = 10, gpu = False, tokenizer_args=None, model_args=None):
     try:
-      self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-      self.model = AutoModel.from_pretrained(model_name)
+      self.tokenizer = AutoTokenizer.from_pretrained(model_name,  **(tokenizer_args or {}))
+      self.model = AutoModel.from_pretrained(model_name, **(model_args or {}))
       self.batch_size = batch_size
+      self.gpu = gpu
+      if self.gpu:
+          self.model.to('cuda')
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
   def preprocess(self, sentence):
@@ -152,7 +165,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess_batch:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -196,7 +209,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.encode_sentences(" فَسَمِعَ رَجُلا ")
             >>> print(result.shape)
             (1, 768)
@@ -258,6 +271,17 @@ class EuclideanDistance(SemanticSimilarityArabic):
             
             
   def preprocess_for_faiss(self, encoded_embeddings):
+      """
+    detaches each element, converts each element to numpy array.  then it converts to a C-contiguous array. finally, it stacks all the elements vertically using np.vstack    
+    this is done so that the encoded sentences are compatible for faiss algorithms. it also is made compatible with sklearn cosine similarity functions
+      Args: 
+        encoded_embeddings : a list of torch.Tensors which are the encoded sentences.
+      Returns:
+        sentences_array : a np array of vertically stacked encoded sentences.
+
+
+    
+    """
       embed_processed = []
       for embeddings in encoded_embeddings:
           embeddings = np.ascontiguousarray(embeddings.detach().numpy())
@@ -283,7 +307,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of calculate_similarity_matrix:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.similarity_sentences([a list of sentences with length 3])
             >>> print(result) #just a example matrix
             [[ 0.          5.19615242 10.39230485]
@@ -323,7 +347,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of find_most_similar_pairs:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.find_n_similar_pair(sentences, 2)
             >>> print(result)
             "[( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
@@ -384,7 +408,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of find_most_similar_sentence:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.find_most_similar_sentence(sentence, list of sentences)
             >>> print(result)
             " فَسَمِعَ رَجُلا يَقْرَأُ : /4 قُلْ هُوَ اللَّهُ أَحَدٌ سورة الإخلاص آية 1 /4 ، إِلَى آخِرِهَا ، فَقَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ : "" وَجَبَتْ "" ، فَقُلْتُ : مَاذَا يَا رَسُولَ اللَّهِ ؟ ، فَقَالَ : "" الْجَنَّةُ "" ، قَالَ أَبُو هُرَيْرَةَ : فَأَرَدْتُ أَنْ أَذْهَبَ إِلَى الرَّجُلِ فَأُبَشِّرَهُ ، ثُمَّ خِفْتُ أَنْ يَفُوتَنِي الْغَدَاءُ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَآثَرْتُ الْغَدَاءَ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ ، ثُمَّ ذَهَبْتُ إِلَى الرَّجُلِ فَوَجَدْتُهُ قَدْ ذَهَبَ ,
@@ -427,7 +451,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> strings, scores, idxs = model.find_most_similar_sentences(list of sentences, sentence , 2)
             >>> print(len(scores))
             >>> 2
@@ -465,7 +489,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.find_most_similar_pair(sentences, 2)
             >>> print(result)
             "( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
