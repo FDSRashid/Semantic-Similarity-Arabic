@@ -60,7 +60,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
     
     Example:
       >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca",
-       tokenizer_args={"max_length": 512},
+       tokenizer_args={"model_max_length": 512},
         ...     model_args={"num_labels": 2})
       
 
@@ -222,7 +222,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
-      max_sequence_length = self.tokenizer.max_length 
+      max_sequence_length = self.tokenizer.model_max_length   
 
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
