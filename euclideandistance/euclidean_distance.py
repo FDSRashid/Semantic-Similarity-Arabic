@@ -41,8 +41,10 @@ from transformers import AutoTokenizer, AutoModel
 
 class EuclideanDistance(SemanticSimilarityArabic):
   """
-    A class for processing and comparing the Cosine similarity of sentences using Arabic  Models.
+    A class for processing and comparing the Euclidean Distance  of sentences using Arabic  Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
+    Important: This class uses a autotokenizer to process sentences. To instantiate a instance of this class,
+    you need a string to the pretrained model. One example is 'CAMeL-Lab/bert-base-arabic-camelbert-ca' There are plenty of others on hugging face.
     
 
     Args:
@@ -62,8 +64,11 @@ class EuclideanDistance(SemanticSimilarityArabic):
         preprocess_batch(sentences: List[str]) -> List[str]:
           Preprocesses a  batch of sentences before encoding.
 
-        encode_sentences(sentence: List[str]) -> np.ndarray:
+        encode_sentences(sentence: List[str]) -> List[torch.Tensor]:
             Encodes a batch of sentences into a fixed-size embedding.
+        
+        preprocess_for_faiss(embedded_sentences: List[torch.Tensor]) -> np.ndarray
+            make a C-contiguous array of encoded sentences for similarity calculations
 
         calculate_similarity(embedding1: np.ndarray, embedding2: np.ndarray) -> float:
             Calculates the cosine similarity between two sentence embeddings.
@@ -82,7 +87,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
             Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
             returns a list of sentences, the similarity scores, and which number of the sentence's it returns
 
-        similarity_sentences(sentences: List[str]) ->  np.nparray :
+        calculate_similarity_matrix(sentences: List[str]) ->  np.nparray :
           calculates the similarity matrix of a list of sentences, doing pre-processing as well.
           to access the similarity score of the i'th and j'th sentences, find the matrix element at
           [i, j].
@@ -186,7 +191,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
             
 
         Returns:
-            sentence numpy.nparray : A numpy array representing the sentence encoded . Note Bert returns one encoded sentence as a 1 by 768 shape.
+            encoded_embeddings (List[torch.Tensor]) : A list of encoded sentences, as pytorch Tensors. Note that bert-like models return 1 by 768 tensors
 
         Example:
             Example usage of encode_sentences:
@@ -199,22 +204,65 @@ class EuclideanDistance(SemanticSimilarityArabic):
       if not isinstance(sentences, list):
         # If a single sentence is provided, wrap it in a list for consistency
         sentences = [sentences]
-    
-      
-      batch_size = self.batch_size
+          
+      preprocessed_sentences = self.preprocess_batch(sentences)
+      max_sequence_length = 512 #normal for bert models- camel tools did not specify, unfortunate
+
       encoded_embeddings = []
-      for i in range(0, len(sentences), batch_size):
-        batch = sentences[i:i + batch_size]
-        preprocessed_sentences = self.preprocess_batch(batch)
+      for sentence in preprocessed_sentences:
+        tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True)
+          
+        input_ids = tokenized_sentence['input_ids']
+        attention_mask = tokenized_sentence['attention_mask']
+        token_type_ids = tokenized_sentence['token_type_ids']
+        if input_ids.shape[1] <= max_sequence_length:
+        # Process the entire sentence
+          chunk = {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'token_type_ids': token_type_ids
+          }
+          if self.gpu:
+            chunk = {key: value.to('cuda') for key, value in chunk.items()}
+          output = self.model(**chunk)
+          cls_representation = output.last_hidden_state[:, 0, :]
+          cls_representation = cls_representation.to('cpu')
+          encoded_embeddings.append(cls_representation)
+        else:
+          # Truncate the sentence into chunks and process them separately
+          
+          for j in range(0, input_ids.shape[1], max_sequence_length):
+            chunk_input_ids = input_ids[:, j:j + max_sequence_length]
+            chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
+            chunk_token_type_ids = token_type_ids[:, j:j + max_sequence_length]
+            chunk = {
+                'input_ids': chunk_input_ids,
+                'attention_mask': chunk_attention_mask,
+                'token_type_ids': chunk_token_type_ids
+            }
+            if self.gpu:
+              chunk = {key: value.to('cuda') for key, value in chunk.items()}
+            output = self.model(**chunk)
+            cls_representation = output.last_hidden_state[:, 0, :]
+            cls_representation = cls_representation.to('cpu')
+            encoded_embeddings.append(cls_representation)
+          
 
-        # Tokenize and obtain embeddings for the batch
-        inputs = self.tokenizer(preprocessed_sentences, return_tensors="pt", padding=True)
-        output = self.model(**inputs)
-
-        # Extract the [CLS] token embeddings and detach
-        embeddings = np.ascontiguousarray(output.last_hidden_state[:, 0, :].detach().numpy())
-        encoded_embeddings.extend(embeddings)
-      return np.vstack(encoded_embeddings)
+        # Convert to NumPy array and append to embeddings list
+          
+          
+      return encoded_embeddings
+        
+          
+          
+            
+            
+  def preprocess_for_faiss(self, encoded_embeddings):
+      embed_processed = []
+      for embeddings in encoded_embeddings:
+          embeddings = np.ascontiguousarray(embeddings.detach().numpy())
+          embed_processed.append(embeddings)
+      return np.vstack(embed_processed)
 
 
   def calculate_similarity_matrix(self, sentences):
@@ -248,7 +296,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence_embeddings = self.encode_sentences(sentences)
+    sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
     pairwise_differences = sentence_embeddings[:, np.newaxis] - sentence_embeddings
     distance_matrix = np.linalg.norm(pairwise_differences, axis=2)
     return distance_matrix
@@ -288,7 +336,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.encode_sentences(sentences)
+      sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
 
         # Calculate pairwise similarities
       index = faiss.IndexFlatL2(sentence_embeddings.shape[1])  # Use Euclidean Distance
@@ -347,8 +395,8 @@ class EuclideanDistance(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentences_embeddings = self.encode_sentences(sentences)
-    sentence_embedding = self.encode_sentences(sentence).astype('float32')
+    sentences_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
+    sentence_embedding = self.preprocess_for_faiss(self.encode_sentences(sentence).astype('float32'))
     index = faiss.IndexFlatL2(sentences_embeddings.shape[1])
     index.add(sentences_embeddings.astype('float32'))
     k = 1  # Find the single closest neighbor
@@ -387,8 +435,8 @@ class EuclideanDistance(SemanticSimilarityArabic):
         """
       if len(sentences) < 2:
           raise ValueError('List of Sentences needs to be at least 2!')
-      encoded_sentences = self.encode_sentences(sentences)
-      encoded_sentence = self.encode_sentences(sentence)
+      encoded_sentences = self.preprocess_for_faiss(self.encode_sentences(sentences))
+      encoded_sentence = self.preprocess_for_faiss(self.encode_sentences(sentence))
       index = faiss.IndexFlatL2(encoded_sentences.shape[1])
       index.add(encoded_sentences)
       encoded_sentence = encoded_sentence.reshape(1, -1).astype('float32')
@@ -429,7 +477,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.encode_sentences(sentences)
+      sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
 
         # Calculate pairwise similarities
       index = faiss.IndexFlatL2(sentence_embeddings.shape[1])  #L2 distance

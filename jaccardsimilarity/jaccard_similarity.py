@@ -53,9 +53,10 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     For specific instructions. Note, Google Colab has slightly different instructions. Check this link
     for the instructions there https://colab.research.google.com/drive/1Y3qCbD6Gw1KEw-lixQx1rI6WlyWnrnDS?usp=sharing .
     
+    Since we are using Camel-Tools pretrained models, we need one of their models to use to instantiate a instance of this class. An example of this is 'calima-msa-r13'
 
     Args:
-        model_name (str): The name of the pretrained model to use for encoding sentences.
+        model_name (str): The name of the pretrained model to use for tokenizing sentences
         batch_size (int) = 10 : the size of the batches you want to process data by. depends on your computational power, and can be increased
         scheme (str)  = 'd3tok': The tokenization scheme for the model. This is a list of all the schemes: ['d2tok', 'atbtok', 'd3seg', 'bwtok', 'atbseg', 'd3tok', 'd2seg', 'd1seg', 'd1tok']
         splits (bool) = True : wether you want the tokens as separate strings.
@@ -74,11 +75,11 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         preprocess_batch(sentences: List[str]) -> List[str]:
           Preprocesses a  batch of sentences before encoding.
 
-        encode_sentences(sentence: List[str]) -> np.ndarray:
-            Encodes a batch of sentences into a fixed-size embedding.
+        tokenize_sentence(sentence: List[str]) -> List[string]:
+            morphologically tokenizes sentence according to the scheme
 
-        calculate_similarity(embedding1: np.ndarray, embedding2: np.ndarray) -> float:
-            Calculates the Jaccard similarity between two sentence embeddings.
+        calculate_similarity(sentence1 : str, sentence2: str) -> float:
+            Calculates the Jaccard similarity between two sentences.
 
         find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
             Finds the two most similar sentences from a list of sentences.
@@ -94,7 +95,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
             Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
             returns a list of sentences, the similarity scores, and which number of the sentence's it returns
 
-        similarity_sentences(sentences: List[str]) ->  np.nparray :
+        calculate_similarity_matrix(sentences: List[str]) ->  np.nparray :
           calculates the similarity matrix of a list of sentences, doing pre-processing as well.
           to access the similarity score of the i'th and j'th sentences, find the matrix element at
           [i, j].
@@ -127,7 +128,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -161,7 +162,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess_batch:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -192,6 +193,30 @@ class JaccardSimilarity(SemanticSimilarityArabic):
      return self.tokenizer.tokenize(simple_word_tokenize(sentence))
 
   def jaccard_similarity(self, encoded_sentence1, encoded_sentence2):
+     """
+
+    This finds the Jaccard Similarity  of a two sentences. Jaccardian Similarity is defined by the size of the intersection of two sets divided by the size
+    of the union of two sets.The closer the score is to 1, the more similar the sentence.
+     
+
+        Args:
+            sentence: a string of the first sentence
+            sentance2 : a string of the second sentence
+            
+
+        Returns:
+            similarity : float of the jaccard similarity
+
+        Example:
+            Example usage of calculate_similarity_matrix:
+            
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> result = model.jaccard_similarity(sentance1, sentence2)
+            >>> print(result) 
+            .4567
+
+            
+        """ 
      set1 = set(encoded_sentence1)
      set2 = set(encoded_sentence2)
      #make sets from the tokenized sentences
@@ -221,7 +246,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of calculate_similarity_matrix:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
             >>> result = model.calculate_similarity_matrix([a list of sentences with length 3])
             >>> print(result) #just a example matrix
             [[ 0.          5.19615242 10.39230485]
@@ -251,8 +276,9 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       """
 
     This finds a specified number of the most similar pairs using Jaccardian Distance.
-    This uses the Faiss Library to optimize the speed and memory usage to find the most similar sentences
-    For more information on the Faiss library, consult this : https://github.com/facebookresearch/faiss
+    This uses the similarity matrix from calculate_similarity_matrix() . It flattens the upper trangular part of the matrix, 
+    then sorts in descending order and gets the number of sentences required. since its making a similarity matrix, i honestly dont
+    recomend for large data sets. i kinda got lazy here. 
 
 
         Args:
@@ -268,7 +294,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of find_most_similar_pairs:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
             >>> result = model.find_n_similar_pair(sentences, 2)
             >>> print(result)
             "[( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
@@ -323,7 +349,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of find_most_similar_sentence:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
             >>> result = model.find_most_similar_sentence(sentence, list of sentences)
             >>> print(result)
             " فَسَمِعَ رَجُلا يَقْرَأُ : /4 قُلْ هُوَ اللَّهُ أَحَدٌ سورة الإخلاص آية 1 /4 ، إِلَى آخِرِهَا ، فَقَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ : "" وَجَبَتْ "" ، فَقُلْتُ : مَاذَا يَا رَسُولَ اللَّهِ ؟ ، فَقَالَ : "" الْجَنَّةُ "" ، قَالَ أَبُو هُرَيْرَةَ : فَأَرَدْتُ أَنْ أَذْهَبَ إِلَى الرَّجُلِ فَأُبَشِّرَهُ ، ثُمَّ خِفْتُ أَنْ يَفُوتَنِي الْغَدَاءُ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَآثَرْتُ الْغَدَاءَ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ ، ثُمَّ ذَهَبْتُ إِلَى الرَّجُلِ فَوَجَدْتُهُ قَدْ ذَهَبَ ,
@@ -350,9 +376,9 @@ class JaccardSimilarity(SemanticSimilarityArabic):
   def find_most_similar_sentences(self, sentences, sentence, n = 2):
       """
 
-    This finds a the most similar sentence from a list of sentances. You input a sentance to co
-    compare the list to. It returns the sentence, the score, and the index of the sentence. 
-    That way you can keep track of which element it came from.
+    This finds  the most similasr sentence from a list of sentances. You input a sentance to co
+    compare the list to. It returns list , each elemenet has the sentence, the score, and the index of the sentence. 
+    That way you can keep track of which element it came from. 
 
 
 
@@ -392,25 +418,23 @@ class JaccardSimilarity(SemanticSimilarityArabic):
   def find_most_similar_pair(self, sentences):
       """
 
-    This finds the most similar pairs using Euclidean Distance.
-    This uses the Faiss Library to optimize the speed and memory usage to find the most similar sentences
-    For more information on the Faiss library, consult this : https://github.com/facebookresearch/faiss
-    Faiss can return a number of the most similar sentences, not just a pair. 
+    This finds the most similar pairs using Jaccardian Similarity.
+    Ngl i got really lazy i just called the other function and set n = 1.  
 
 
         Args:
             sentence: A List of Strings that are the sentances you wish to find the similarity for.
-            n : the number of pairs to return. so, n = 3 would return the 3 most similar sentance pairs
+            
             
 
         Returns:
-            sentence numpy.nparray : A numpy array representing the sentence encoded . Note Bert returns one encoded sentence as a 1 by 768 shape.
+            sentence tuple[str, str, float] : returns the two sentences and the similarity between them 
 
         Example:
             Example usage of encode_sentences:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
-            >>> result = model.find_most_similar_pair(sentences, 2)
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> result = model.find_most_similar_pair(sentences)
             >>> print(result)
             "( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
    إِذَا تَوَضَّأَ الْعَبْدُ الْمُسْلِمُ فَغَسَلَ وَجْهَهُ خَرَجَ مِنْ وَجْهِهِ كُلُّ خَطِيئَةٍ نَظَرَ إِلَيْهَا بِعَيْنِهِ آخِرَ قَطْرِ الْمَاءِ ، فَإِذَا غَسَلَ يَدَيْهِ خَرَجَتْ مِنْهُمَا كُلُّ خَطِيئَةٍ بَطَشَهَا بِهِمَا ، ثُمَّ كَذَلِكَ حَتَّى يَخْرُجَ نَقِيًّا مِنَ الذُّنُوبِ ,
@@ -418,6 +442,6 @@ class JaccardSimilarity(SemanticSimilarityArabic):
  )"
         """ 
       
-
-      return self.find_most_similar_pairs(sentences, 1)
+      sim_sentance = self.find_most_similar_pairs(sentences, 1)
+      return sim_sentance[0]
 

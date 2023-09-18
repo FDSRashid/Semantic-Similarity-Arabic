@@ -44,7 +44,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
   """
     A class for processing and comparing the Cosine similarity of sentences using Arabic  Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
-    
+    Important: This class uses a autotokenizer to process sentences. To instantiate a instance of this class,
+    you need a string to the pretrained model. One example is 'CAMeL-Lab/bert-base-arabic-camelbert-ca' There are plenty of others on hugging face.
 
     Args:
         model_name (str): The name of the pretrained model to use for encoding sentences.
@@ -63,8 +64,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
         preprocess_batch(sentences: List[str]) -> List[str]:
           Preprocesses a  batch of sentences before encoding.
 
-        encode_sentences(sentence: List[str]) -> np.ndarray:
-            Encodes a batch of sentences into a fixed-size embedding.
+        encode_sentences(sentence: List[str]) -> List[torch.Tensor]:
+            Encodes a  list of sentences to a embeding. returns a list of respective tensors. be careful how its used. 
 
         calculate_similarity(embedding1: np.ndarray, embedding2: np.ndarray) -> float:
             Calculates the cosine similarity between two sentence embeddings.
@@ -79,11 +80,15 @@ class CosineSimilarity(SemanticSimilarityArabic):
             Finds the most similar sentence for a input sentence from a list of sentences.
             returns the sentence, the similarity score, and which number of the sentence it returns
             
+
+        preprocess_for_faiss(embedded_sentences: List[torch.Tensor]) -> np.ndarray
+            make a C-contiguous array of encoded sentences for similarity calculations
+
         find_most_similar_sentences(sentences: List[str], sentence: str, n: int) -> Tuple[list[str], list[float], list[int]]:
             Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
             returns a list of sentences, the similarity scores, and which number of the sentence's it returns
 
-        similarity_sentences(sentences: List[str]) ->  np.nparray :
+        calculate_similarity_matrix(sentences: List[str]) ->  np.nparray :
           calculates the similarity matrix of a list of sentences, doing pre-processing as well.
           to access the similarity score of the i'th and j'th sentences, find the matrix element at
           [i, j].
@@ -190,7 +195,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             
 
         Returns:
-            sentence numpy.nparray : A numpy array representing the sentence encoded . Note Bert returns one encoded sentence as a 1 by 768 shape.
+            embedded_sentences list : A list of embedded sentences. each element is the last hidden state of the corresponding output
 
         Example:
             Example usage of encode_sentences:
@@ -257,11 +262,22 @@ class CosineSimilarity(SemanticSimilarityArabic):
             
             
   def preprocess_for_faiss(self, encoded_embeddings):
-      embed_processed = []
-      for embeddings in encoded_embeddings:
-          embeddings = np.ascontiguousarray(embeddings.detach().numpy())
-          embed_processed.append(embeddings)
-      return np.vstack(embed_processed)
+    """
+    detaches each element, converts each element to numpy array.  then it converts to a C-contiguous array. finally, it stacks all the elements vertically using np.vstack    
+    this is done so that the encoded sentences are compatible for faiss algorithms. it also is made conpatible with sklearn cosine similarity functions
+      Args: 
+        encoded_embeddings : a list of torch.Tensors which are the encoded sentences.
+      Returns:
+        sentences_array : a np array of vertically stacked encoded sentences.
+
+
+    
+    """
+    embed_processed = []
+    for embeddings in encoded_embeddings:
+        embeddings = np.ascontiguousarray(embeddings.detach().numpy())
+        embed_processed.append(embeddings)
+    return np.vstack(embed_processed)
   def calculate_similarity_matrix(self, sentences):
     """
 
