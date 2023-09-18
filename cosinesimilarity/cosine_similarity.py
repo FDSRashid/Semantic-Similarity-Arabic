@@ -373,16 +373,15 @@ class CosineSimilarity(SemanticSimilarityArabic):
       for i in range(len(sentences)):
         similar_indices = I[i]
         similarity_scores = D[i]
-        for j in range(1, k):
-          similar_idx = similar_indices[j]
-          similarity_score = similarity_scores[j]
-          most_similar_pairs.append((sentences[i], sentences[similar_idx], similarity_score))
+        top_n_indices = similar_indices[1:n + 1]  # Exclude the first index, which is the sentence itself
+        top_n_scores = similarity_scores[1:n + 1]
 
-        # Find the pair with the highest similarity score
-        #to retrieve top n pairs, use sort() instead of max() and grab the first n elements
-      most_similar_pairs = sorted(most_similar_pairs, key=lambda x: x[2], reverse = True)
+        for j, sim_idx in enumerate(top_n_indices):
+            most_similar_pairs.append((sentences[i], sentences[sim_idx], top_n_scores[j]))
 
-      return most_similar_pairs[:n]
+    
+      most_similar_pair = sorted(most_similar_pairs, key=lambda x: x[2])[:n]
+      return most_similar_pair
 
   def find_most_similar_sentence(self, sentences, sentence):
 
