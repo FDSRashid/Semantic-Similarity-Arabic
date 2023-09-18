@@ -209,23 +209,42 @@ class CosineSimilarity(SemanticSimilarityArabic):
 
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
-          tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True)
-          num_chunks = len(tokenized_sentence['input_ids'][0])
-          input_ids = tokenized_sentence['input_ids']
-          attention_mask = tokenized_sentence['attention_mask']
-          token_type_ids = tokenized_sentence['token_type_ids']
-          max_chunk_size = min(max_sequence_length, num_chunks)
-          for j in range(0, num_chunks , max_chunk_size):
-             chunk = {
-                'input_ids': input_ids[:, j:j + max_chunk_size],
-                'attention_mask': attention_mask[:, j:j + max_chunk_size],
-                'token_type_ids': token_type_ids[:, j:j + max_chunk_size]}
-             if self.gpu:
-                chunk = {key: value.to('cuda') for key, value in chunk.items()}
-             output = self.model(**chunk)
-             cls_representation = output.last_hidden_state[:, 0, :]
-             cls_representation = cls_representation.to('cpu')
-             encoded_embeddings.append(cls_representation)
+        tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True)
+          
+        input_ids = tokenized_sentence['input_ids']
+        attention_mask = tokenized_sentence['attention_mask']
+        token_type_ids = tokenized_sentence['token_type_ids']
+        if input_ids.shape[1] <= max_sequence_length:
+        # Process the entire sentence
+          chunk = {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'token_type_ids': token_type_ids
+          }
+          if self.gpu:
+            chunk = {key: value.to('cuda') for key, value in chunk.items()}
+          output = self.model(**chunk)
+          cls_representation = output.last_hidden_state[:, 0, :]
+          cls_representation = cls_representation.to('cpu')
+          encoded_embeddings.append(cls_representation)
+        else:
+          # Truncate the sentence into chunks and process them separately
+          for j in range(0, input_ids.shape[1], max_sequence_length):
+            chunk_input_ids = input_ids[:, j:j + max_sequence_length]
+            chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
+            chunk_token_type_ids = token_type_ids[:, j:j + max_sequence_length]
+            chunk = {
+                'input_ids': chunk_input_ids,
+                'attention_mask': chunk_attention_mask,
+                'token_type_ids': chunk_token_type_ids
+            }
+            if self.gpu:
+              chunk = {key: value.to('cuda') for key, value in chunk.items()}
+            output = self.model(**chunk)
+            cls_representation = output.last_hidden_state[:, 0, :]
+            cls_representation = cls_representation.to('cpu')
+            encoded_embeddings.append(cls_representation)
+          
 
         # Convert to NumPy array and append to embeddings list
           
