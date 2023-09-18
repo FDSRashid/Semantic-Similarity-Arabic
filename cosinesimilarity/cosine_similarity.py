@@ -383,7 +383,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
 
         # Find the pair with the highest similarity score
         #to retrieve top n pairs, use sort() instead of max() and grab the first n elements
-      most_similar_pairs = sorted(most_similar_pairs, key=lambda x: x[2])
+      most_similar_pairs = sorted(most_similar_pairs, key=lambda x: x[2], reverse = True)
 
       return most_similar_pairs[:n]
 
