@@ -205,7 +205,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
-      max_sequence_length = self.tokenizer.model_max_length
+      max_sequence_length = 512 #normal for bert models- camel tools did not specify, unfortunate
 
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
@@ -229,6 +229,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
           encoded_embeddings.append(cls_representation)
         else:
           # Truncate the sentence into chunks and process them separately
+          
           for j in range(0, input_ids.shape[1], max_sequence_length):
             chunk_input_ids = input_ids[:, j:j + max_sequence_length]
             chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
