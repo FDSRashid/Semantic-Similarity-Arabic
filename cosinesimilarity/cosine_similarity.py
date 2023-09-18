@@ -205,18 +205,31 @@ class CosineSimilarity(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
+      max_sequence_length = self.tokenizer.model_max_length
+
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
-          tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True, max_length = 512, truncation = True)
-          if self.gpu:
-              tokenized_sentence = tokenized_sentence.to('cuda')
-          output = self.model(**tokenized_sentence)
-          cls_representation = output.last_hidden_state[:, 0, :]
-          cls_representation = cls_representation.to('cpu')
+          tokenized_sentence = self.tokenizer(sentence, return_tensors = 'pt', padding = True)
+          num_chunks = len(tokenized_sentence['input_ids'][0])
+          input_ids = tokenized_sentence['input_ids']
+          attention_mask = tokenized_sentence['attention_mask']
+          token_type_ids = tokenized_sentence['token_type_ids']
+          max_chunk_size = min(max_sequence_length, num_chunks)
+          for j in range(0, num_chunks , max_chunk_size):
+             chunk = {
+                'input_ids': input_ids[:, j:j + max_chunk_size],
+                'attention_mask': attention_mask[:, j:j + max_chunk_size],
+                'token_type_ids': token_type_ids[:, j:j + max_chunk_size]}
+             if self.gpu:
+                chunk = {key: value.to('cuda') for key, value in chunk.items()}
+             output = self.model(**chunk)
+             cls_representation = output.last_hidden_state[:, 0, :]
+             cls_representation = cls_representation.to('cpu')
+             encoded_embeddings.append(cls_representation)
 
         # Convert to NumPy array and append to embeddings list
           
-          encoded_embeddings.append(cls_representation)
+          
       return encoded_embeddings
         
           
