@@ -287,7 +287,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
     """
     embed_processed = []
     for embeddings in encoded_embeddings:
-        embeddings = np.ascontiguousarray(embeddings.detach().numpy())
+        embeddings = np.ascontiguousarray(embeddings.detach().numpy()).astype('float32')
         embed_processed.append(embeddings)
     return np.vstack(embed_processed)
   def calculate_similarity_matrix(self, sentences):
