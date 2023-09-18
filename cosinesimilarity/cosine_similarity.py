@@ -364,11 +364,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
       faiss.normalize_L2(sentence_embeddings)
 
         # Add sentence embeddings to the index
-      index.add(sentence_embeddings.astype('float32'))
+      index.add(sentence_embeddings))
 
         # Find the two most similar sentences
       k = 2  # Number of similar sentences to retrieve
-      D, I = index.search(sentence_embeddings.astype('float32'), k)
+      D, I = index.search(sentence_embeddings, k)
       most_similar_pairs = []
       for i in range(len(sentences)):
         similar_indices = I[i]
@@ -462,7 +462,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
       index = faiss.IndexFlatIP(encoded_sentences.shape[1])
       faiss.normalize_L2(encoded_sentences)
       index.add(encoded_sentences)
-      encoded_sentence = encoded_sentence.reshape(1, -1).astype('float32')
+      encoded_sentence = encoded_sentence.reshape(1, -1)
       _, similar_indices = index.search(encoded_sentence, n)
       top_similar_sentences = [sentences[idx] for idx in similar_indices[0]]
       return top_similar_sentences , _[0], similar_indices[0]
@@ -506,11 +506,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
       faiss.normalize_L2(sentence_embeddings)
 
         # Add sentence embeddings to the index
-      index.add(sentence_embeddings.astype('float32'))
+      index.add(sentence_embeddings)
 
         # Find the two most similar sentences
       k = 2  # Number of similar sentences to retrieve
-      D, I = index.search(sentence_embeddings.astype('float32'), k)
+      D, I = index.search(sentence_embeddings, k)
       most_similar_pairs = []
       for i in range(len(sentences)):
         similar_indices = I[i]
