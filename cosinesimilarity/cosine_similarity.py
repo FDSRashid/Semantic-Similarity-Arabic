@@ -261,7 +261,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence_embeddings = np.vstack(self.encode_sentences(sentences))
+    sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
     return cosine_similarity(sentence_embeddings)
 
 
@@ -358,8 +358,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentences_embeddings = np.vstack(self.encode_sentences(sentences))
-    sentence_embedding = self.encode_sentences(sentence)
+    sentences_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
+    sentence_embedding = self.preprocess_for_faiss(self.encode_sentences(sentence))
     similarities = cosine_similarity(sentence_embedding, sentences_embeddings)[0]
     most_similar_index = np.argmax(similarities)
     most_similar_sentence = sentences[most_similar_index]
