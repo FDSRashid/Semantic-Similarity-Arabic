@@ -116,7 +116,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
           try:
             self.model.to('cuda')
           except Exception as e:
-            print(f"Warning: GPU not available. Falling back to CPU. Error: {e}")
+            raise ValueError(f"Warning: GPU not available. Falling back to CPU. Error: {e}")
 
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
@@ -475,17 +475,17 @@ class CosineSimilarity(SemanticSimilarityArabic):
             >>> 2
             "
         """
-      if len(sentences) < 2:
-          raise ValueError('List of Sentences needs to be at least 2!')
+      if not isinstance(sentences, list) or len(sentences) < 2:
+        raise ValueError("Input must be a list of at least two sentences")
       encoded_sentences = self.preprocess_for_faiss(self.encode_sentences(sentences))
       encoded_sentence = self.preprocess_for_faiss(self.encode_sentences(sentence)) 
       index = faiss.IndexFlatIP(encoded_sentences.shape[1])
       faiss.normalize_L2(encoded_sentences)
       index.add(encoded_sentences)
       encoded_sentence = encoded_sentence.reshape(1, -1)
-      _, similar_indices = index.search(encoded_sentence, n)
+      distances, similar_indices = index.search(encoded_sentence, n)
       top_similar_sentences = [sentences[idx] for idx in similar_indices[0]]
-      return top_similar_sentences , _[0], similar_indices[0]
+      return top_similar_sentences , distances[0], similar_indices[0]
       
   def find_most_similar_pair(self, sentences):
       """

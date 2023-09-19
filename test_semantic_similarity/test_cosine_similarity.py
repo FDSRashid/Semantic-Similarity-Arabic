@@ -88,7 +88,7 @@ def test_valid_input_sentence():
     assert isinstance(result[1], float)
     assert isinstance(result[2], int)
 
-def test_invalid_input_sentences():
+def test_invalid_input_sentence():
     # Test with less than 2 sentences in the list
     model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca")
     with pytest.raises(ValueError):
@@ -124,13 +124,13 @@ def test_valid_input_sentences():
     assert isinstance(result, tuple)
     assert len(result) == 3
     assert isinstance(result[0], list)
-    assert isinstance(result[1], list)
+    assert isinstance(result[1], np.ndarray)
     assert isinstance(result[2], list)
     assert len(result[0]) == n
     assert len(result[1]) == n
     assert len(result[2]) == n
     assert all(isinstance(sent, str) for sent in result[0])
-    assert all(isinstance(score, float) for score in result[1])
+    assert all(isinstance(score, np.float32) for score in result[1])
     assert all(isinstance(idx, int) for idx in result[2])
 
 def test_invalid_input_sentences():
@@ -162,7 +162,7 @@ def test_valid_input():
     assert len(result) == 3
     assert isinstance(result[0], str)
     assert isinstance(result[1], str)
-    assert isinstance(result[2], float)
+    assert isinstance(result[2], np.float32)
 
 def test_invalid_input():
     # Test with less than 2 sentences in the list
