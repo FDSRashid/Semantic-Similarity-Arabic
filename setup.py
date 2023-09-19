@@ -15,6 +15,6 @@ setup(
         'torch>=1.9.1',
         'faiss-cpu>=1.7.4',
         'camel-tools>=1.5.2',
-        'transformers>=4.33.1'
+        'transformers>=4.30.2'
     ],
 )
