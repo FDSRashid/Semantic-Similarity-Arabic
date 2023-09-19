@@ -19,6 +19,13 @@ jobs:
           python-version: 3.7
           add-path: true
 
+      - name: Set up virtual environment
+        run: python -m venv semanticsimilarityarabic_v1  # Replace 'myenv' with your desired virtual environment name
+
+      - name: Activate virtual environment
+        run: |
+          source myenv/bin/activate  # Replace 'myenv' with your virtual environment name
+
       - name: Install required system packages
         run: |
           sudo apt-get update
@@ -33,7 +40,6 @@ jobs:
       
       - name: Install my Python package
         run: pip install .
-
 
       - name: Run pytest
         run: pytest test_semantic_similarity/  # Adjust the path to your test directory
