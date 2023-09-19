@@ -489,7 +489,9 @@ class CosineSimilarity(SemanticSimilarityArabic):
       encoded_sentence = encoded_sentence.reshape(1, -1)
       distances, similar_indices = index.search(encoded_sentence, n)
       top_similar_sentences = [sentences[idx] for idx in similar_indices[0]]
-      return top_similar_sentences , distances[0].tolist(), similar_indices[0].tolist()
+      idcx = similar_indices[0].tolist()
+      similar_indices_int = [int(idx) for idx in idcx]
+      return top_similar_sentences , distances[0].tolist(), similar_indices_int
 
       
   def find_most_similar_pair(self, sentences):
