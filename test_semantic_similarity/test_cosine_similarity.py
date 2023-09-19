@@ -1,7 +1,7 @@
 import pytest
 import torch
 import numpy as np
-from Semantic_Similarity_Arabic.cosinesimilarity.cosine_similarity import CosineSimilarity
+from cosine_similarity import CosineSimilarity
 
 
 
