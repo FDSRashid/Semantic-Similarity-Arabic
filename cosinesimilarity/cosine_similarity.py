@@ -364,7 +364,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
       faiss.normalize_L2(sentence_embeddings)
 
         # Add sentence embeddings to the index
-      index.add(sentence_embeddings))
+      index.add(sentence_embeddings)
 
         # Find the two most similar sentences
       k = 2  # Number of similar sentences to retrieve
