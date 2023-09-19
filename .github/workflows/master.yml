@@ -25,6 +25,10 @@ jobs:
             
       - name: Install dependencies from requirements.txt
         run: pip install -r requirements.txt
+      
+      - name: Install your Python package
+        run: pip install .
+
 
       - name: Run pytest
         run: pytest test_semantic_similarity/  # Adjust the path to your test directory
