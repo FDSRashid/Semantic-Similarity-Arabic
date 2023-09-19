@@ -175,7 +175,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
         """
 
     if not isinstance(sentences, list):
-        raise ValueError("Input must be a list of sentences")
+        # If a single sentence is provided, wrap it in a list for consistency
+      sentences = [sentences]
 
     preprocessed_sentences = []
 
@@ -278,13 +279,26 @@ class CosineSimilarity(SemanticSimilarityArabic):
     detaches each element, converts each element to numpy array.  then it converts to a C-contiguous array. finally, it stacks all the elements vertically using np.vstack    
     this is done so that the encoded sentences are compatible for faiss algorithms. it also is made compatible with sklearn cosine similarity functions
       Args: 
-        encoded_embeddings : a list of torch.Tensors which are the encoded sentences.
+        encoded_embeddings : a list of torch.Tensors which are the encoded sentences. if not list, wrapts it in list. teehee
       Returns:
         sentences_array : a np array of vertically stacked encoded sentences.
 
 
     
     """
+    if not isinstance(encoded_embeddings, list):
+        # If a single sentence is provided, wrap it in a list for consistency
+        encoded_embeddings = [encoded_embeddings]
+    for i, sentence in enumerate(encoded_embeddings):
+      if not torch.is_tensor(sentence):
+         raise ValueError(f"Element at index {i} is not a tensor.")
+      shape = sentence.shape
+        
+        # Check if it matches the expected shape (assuming all tensors should have the same shape)
+      if expected_shape is None:
+        expected_shape = shape
+      elif shape != expected_shape:
+         raise ValueError(f"Element at index {i} has dimensions {shape}, expected {expected_shape}.")
     
     return np.vstack([np.ascontiguousarray(tensor.detach().numpy()).astype('float32') for tensor in encoded_embeddings])
   def calculate_similarity_matrix(self, sentences):
@@ -355,6 +369,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
         """ 
       if not isinstance(sentences, list) or len(sentences) < 2:
         raise ValueError("Input must be a list of at least two sentences")
+      if n <= 0:
+            raise ValueError("The value of 'n' must be greater than 0")
 
         # Preprocess and encode all sentences
       sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
@@ -524,4 +540,5 @@ class CosineSimilarity(SemanticSimilarityArabic):
       most_similar_pair = max(most_similar_pairs, key=lambda x: x[2])
 
       return most_similar_pair
+  
 
