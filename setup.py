@@ -17,5 +17,5 @@ setup(
         'camel-tools>=1.5.2',
         'transformers>=4.30.2'
     ],
-    python_requires='>=3.7, <3.10'
+    python_requires='>=3.7, <=3.10'
 )
