@@ -477,11 +477,14 @@ class CosineSimilarity(SemanticSimilarityArabic):
         """
       if not isinstance(sentences, list) or len(sentences) < 2:
         raise ValueError("Input must be a list of at least two sentences")
+      if n > len(sentences):
+        raise ValueError("'n' cannot be greater than the number of sentences in the list.")
   
       encoded_sentences = self.preprocess_for_faiss(self.encode_sentences(sentences))
       encoded_sentence = self.preprocess_for_faiss(self.encode_sentences(sentence)) 
       index = faiss.IndexFlatIP(encoded_sentences.shape[1])
       faiss.normalize_L2(encoded_sentences)
+      faiss.normalize_L2(encoded_sentence)
       index.add(encoded_sentences)
       encoded_sentence = encoded_sentence.reshape(1, -1)
       distances, similar_indices = index.search(encoded_sentence, n)

@@ -85,7 +85,7 @@ def test_valid_input_sentence():
     assert isinstance(result, tuple)
     assert len(result) == 3
     assert isinstance(result[0], str)
-    assert isinstance(result[1], float)
+    assert isinstance(result[1], np.float32)
     assert isinstance(result[2], int)
 
 def test_invalid_input_sentence():
@@ -124,7 +124,7 @@ def test_valid_input_sentences():
     assert isinstance(result, tuple)
     assert len(result) == 3
     assert isinstance(result[0], list)
-    assert isinstance(result[1], np.ndarray)
+    assert isinstance(result[1], list)
     assert isinstance(result[2], list)
     assert len(result[0]) == n
     assert len(result[1]) == n
@@ -149,8 +149,9 @@ def test_n_greater_than_sentences():
     sentences = ["A", "B"]
     sentence = "C"
     n = 3
-    result = model.find_most_similar_sentences(sentences, sentence, n)
-    assert len(result[0]) == len(result[1]) == len(result[2]) == 2  # Should return all sentences
+    with pytest.raises(ValueError):
+        model.find_most_similar_sentences(sentences, sentence, n)
+    
 
 
 
