@@ -12,7 +12,7 @@ setup(
     install_requires=[
         # Include any additional dependencies here
         'numpy>=1.18.0',
-        'torch>=2.0.1',
+        'torch>=1.9.1',
         'faiss-cpu>=1.7.4',
         'camel-tools>=1.5.2',
         'transformers>=4.33.1'
