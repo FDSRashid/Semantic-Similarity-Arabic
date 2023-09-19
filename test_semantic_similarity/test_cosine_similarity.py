@@ -60,7 +60,7 @@ def test_valid_input_pairs():
         assert len(pair) == 3
         assert isinstance(pair[0], str)
         assert isinstance(pair[1], str)
-        assert isinstance(pair[2], float)
+        assert isinstance(pair[2], np.float32)
 
 def test_invalid_input_pairs():
     model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca")
