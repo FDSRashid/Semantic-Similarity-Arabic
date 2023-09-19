@@ -58,8 +58,6 @@ def test_valid_input_pairs():
     for pair in result:
         assert isinstance(pair, tuple)
         assert len(pair) == 3
-        assert isinstance(pair[0], str)
-        assert isinstance(pair[1], str)
         assert isinstance(pair[2], np.float32)
 
 def test_invalid_input_pairs():
@@ -158,8 +156,6 @@ def test_valid_input():
     result = model.find_most_similar_pair(sentences)
     assert isinstance(result, tuple)
     assert len(result) == 3
-    assert isinstance(result[0], str)
-    assert isinstance(result[1], str)
     assert isinstance(result[2], np.float32)
 
 def test_invalid_input():

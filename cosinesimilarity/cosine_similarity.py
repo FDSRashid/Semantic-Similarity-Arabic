@@ -356,7 +356,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             
 
         Returns:
-          list [Tuple[string, string, float]] : a list of the sentences, and the similarity score between them.
+          list [Tuple[int, int, float]] : a list of the index's of the sentences, and the similarity score between them.
               
             
 
@@ -505,12 +505,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
 
         Args:
             sentence: A List of Strings that are the sentances you wish to find the similarity for.
-            n : the number of pairs to return. so, n = 3 would return the 3 most similar sentance pairs
+            
             
 
         Returns:
-            sentence numpy.nparray : A numpy array representing the sentence encoded . Note Bert returns one encoded sentence as a 1 by 768 shape.
-
+            idx1, id2, score : the index's of the sentences, and the similarity score between them.
         Example:
             Example usage of encode_sentences:
             
@@ -545,7 +544,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         for j in range(1, k):
           similar_idx = similar_indices[j]
           similarity_score = similarity_scores[j]
-          most_similar_pairs.append((sentences[i], sentences[similar_idx], similarity_score))
+          most_similar_pairs.append((i, similar_idx, similarity_score))
 
         # Find the pair with the highest similarity score
         #to retrieve top n pairs, use sort() instead of max() and grab the first n elements
