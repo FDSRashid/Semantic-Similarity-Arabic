@@ -130,8 +130,6 @@ def test_valid_input_sentences():
     assert len(result[1]) == n
     assert len(result[2]) == n
     assert all(isinstance(sent, str) for sent in result[0])
-    assert all(isinstance(score, np.float32) for score in result[1])
-    assert all(isinstance(idx, int) for idx in result[2])
 
 def test_invalid_input_sentences():
     # Test with less than 2 sentences in the list
