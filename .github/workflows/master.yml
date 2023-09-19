@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master  # Adjust the branch name as needed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # You can choose a different Ubuntu version if needed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7  # Adjust the Python version as needed
+
+      - name: Install required system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libboost-all-dev libeigen3-dev
+            
+      - name: Install dependencies from requirements.txt
+        run: pip install -r requirements.txt
+
+      - name: Install your Python package
+        run: pip install .
+
+      - name: Run pytest
+        run: pytest test_semantic_similarity/  # Adjust the path to your test directory
