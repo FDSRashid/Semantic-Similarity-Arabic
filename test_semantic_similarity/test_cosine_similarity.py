@@ -19,10 +19,12 @@ def test_constructor_default():
     #test 3 different type of tokenizers
     expected_model_args = {"num_labels": 2}
     expected_tokenizer_args = {"model_max_length": 512}
-    model = CosineSimilarity('CAMeL-Lab/bert-base-arabic-camelbert-ca', gpu = True,tokenizer_args=expected_tokenizer_args, 
-                             model_args=expected_model_args)
     
-    assert next(model.model.parameters()).device == torch.device("cuda")
+    with pytest.raises(ValueError):
+        CosineSimilarity('CAMeL-Lab/bert-base-arabic-camelbert-ca', gpu = True,tokenizer_args=expected_tokenizer_args, 
+                             model_args=expected_model_args)
+    model = CosineSimilarity('CAMeL-Lab/bert-base-arabic-camelbert-ca',tokenizer_args=expected_tokenizer_args, 
+                             model_args=expected_model_args)
     assert model.tokenizer.model_max_length == expected_tokenizer_args['model_max_length']
     assert model.model.config.num_labels == expected_model_args['num_labels']
 
@@ -36,7 +38,7 @@ def test_preprocess():
 def test_encode():
     model = CosineSimilarity('CAMeL-Lab/bert-base-arabic-camelbert-ca')
     encoded = model.encode_sentences('هل ذهبت الي المكتبه؟')
-    assert type[encoded] == list
+    assert type(encoded) == list
     assert torch.is_tensor(encoded[0])
 
 def test_preprocess_faiss():

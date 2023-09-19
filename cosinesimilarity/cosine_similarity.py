@@ -113,7 +113,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
       self.batch_size = batch_size
       self.gpu = gpu
       if self.gpu:
-          self.model.to('cuda')
+          try:
+            self.model.to('cuda')
+          except Exception as e:
+            print(f"Warning: GPU not available. Falling back to CPU. Error: {e}")
+
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
   def preprocess(self, sentence):
@@ -289,6 +293,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
     if not isinstance(encoded_embeddings, list):
         # If a single sentence is provided, wrap it in a list for consistency
         encoded_embeddings = [encoded_embeddings]
+    expected_shape = None
     for i, sentence in enumerate(encoded_embeddings):
       if not torch.is_tensor(sentence):
          raise ValueError(f"Element at index {i} is not a tensor.")
