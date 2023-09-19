@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
-          add-path: true
 
       - name: Set up virtual environment
         run: python -m venv semanticsimilarityarabic_v1  # Replace 'myenv' with your desired virtual environment name
