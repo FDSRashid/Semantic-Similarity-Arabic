@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7  # Adjust the Python version as needed
+          python-version: 3.x  # Adjust the Python version as needed
 
       - name: Install required system packages
         run: |

@@ -1,9 +1,10 @@
 import pytest
-from ..cosinesimilarity.cosine_similarity import CosineSimilarity
-
-
 import torch
 import numpy as np
+from cosinesimilarity.cosine_similarity import CosineSimilarity
+
+
+
 
 def test_constructor_required():
     #test 3 different type of tokenizers
