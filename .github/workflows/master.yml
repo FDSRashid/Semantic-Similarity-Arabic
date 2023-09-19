@@ -15,8 +15,6 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v2
-        with:
-          python-version: 3.x  # Adjust the Python version as needed
 
       - name: Install required system packages
         run: |
@@ -30,7 +28,7 @@ jobs:
       - name: Install dependencies from requirements.txt
         run: pip install -r requirements.txt
       
-      - name: Install your Python package
+      - name: Install my Python package
         run: pip install .
 
 
