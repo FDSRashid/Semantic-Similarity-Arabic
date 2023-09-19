@@ -1,5 +1,6 @@
-from cosinesimilarity.cosine_similarity import CosineSimilarity
 import pytest
+from cosinesimilarity.cosine_similarity import CosineSimilarity
+
 import torch
 import numpy as np
 
