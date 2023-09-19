@@ -24,7 +24,7 @@ jobs:
 
       - name: Activate virtual environment
         run: |
-          source myenv/bin/activate  # Replace 'myenv' with your virtual environment name
+          source semanticsimilarityarabic_v1/bin/activate 
 
       - name: Install required system packages
         run: |
