@@ -537,18 +537,16 @@ class CosineSimilarity(SemanticSimilarityArabic):
         # Find the two most similar sentences
       k = 2  # Number of similar sentences to retrieve
       D, I = index.search(sentence_embeddings, k)
-      most_similar_pairs = []
+      most_similar_pair = None
+      max_similarity_score = -1
       for i in range(len(sentences)):
-        similar_indices = I[i]
-        similarity_scores = D[i]
         for j in range(1, k):
-          similar_idx = similar_indices[j]
-          similarity_score = similarity_scores[j]
-          most_similar_pairs.append((i, similar_idx, similarity_score))
+            similar_idx = I[i][j]
+            similarity_score = D[i][j]
 
-        # Find the pair with the highest similarity score
-        #to retrieve top n pairs, use sort() instead of max() and grab the first n elements
-      most_similar_pair = max(most_similar_pairs, key=lambda x: x[2])
+            if similarity_score > max_similarity_score and i!=similar_idx:
+                max_similarity_score = similarity_score
+                most_similar_pair = (i, similar_idx, max_similarity_score)
 
       return most_similar_pair
   
