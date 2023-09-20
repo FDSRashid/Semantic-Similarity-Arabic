@@ -5,3 +5,4 @@ torch
 numpy
 faiss-cpu
 pytest
+datasets
