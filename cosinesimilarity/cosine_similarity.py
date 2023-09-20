@@ -408,7 +408,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
                 unique_pairs.add(pair)
 
     
-      most_similar_pair = sorted(most_similar_pairs, key=lambda x: x[2])[:n]
+      most_similar_pair = sorted(most_similar_pairs, key=lambda x: x[2])[:-n]
       return most_similar_pair
 
   def find_most_similar_sentence(self, sentences, sentence):
