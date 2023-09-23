@@ -391,6 +391,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
       k = 2  # Number of similar sentences to retrieve
       D, I = index.search(sentence_embeddings, k)
       most_similar_pairs = []
+      unique_pairs = set()
       for i in range(len(sentences)):
         similar_indices = I[i]
         similarity_scores = D[i]
@@ -398,12 +399,12 @@ class CosineSimilarity(SemanticSimilarityArabic):
         top_n_scores = similarity_scores[1:n + 1]
 
         # Create a set to keep track of unique pairs
-        unique_pairs = set()
+        
 
         for j, sim_idx in enumerate(top_n_indices):
             # Check if the pair is unique by comparing sorted tuples
             pair = tuple(sorted([i, sim_idx]))
-            if pair not in unique_pairs:
+            if pair not in unique_pairs and i!= sim_idx:
                 most_similar_pairs.append((i, sim_idx, top_n_scores[j]))
                 unique_pairs.add(pair)
 
