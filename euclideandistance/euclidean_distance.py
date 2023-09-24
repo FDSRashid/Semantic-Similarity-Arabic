@@ -258,7 +258,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
             output = self.model(**chunk)
             if j == 0:
                accumulated_embedding = torch.zeros(
-                (1, output.shape[-1]), dtype=torch.float32)
+                (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
             cls_representation = output.last_hidden_state[:, 0, :]
             cls_representation = cls_representation.to('cpu')
             accumulated_embedding += cls_representation
