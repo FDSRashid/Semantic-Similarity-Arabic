@@ -204,12 +204,12 @@ class EuclideanDistance(SemanticSimilarityArabic):
             
 
         Returns:
-            encoded_embeddings (List[torch.Tensor]) : A list of encoded sentences, as pytorch Tensors. Note that bert-like models return 1 by 768 tensors
+            embedded_sentences list : A list of embedded sentences. each element is the last hidden state of the corresponding output
 
         Example:
             Example usage of encode_sentences:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
             >>> result = model.encode_sentences(" فَسَمِعَ رَجُلا ")
             >>> print(result.shape)
             (1, 768)
@@ -219,7 +219,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
-      max_sequence_length = 512 #normal for bert models- camel tools did not specify, unfortunate
+      max_sequence_length = self.tokenizer.model_max_length   
 
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
@@ -256,9 +256,14 @@ class EuclideanDistance(SemanticSimilarityArabic):
             if self.gpu:
               chunk = {key: value.to('cuda') for key, value in chunk.items()}
             output = self.model(**chunk)
+            if j == 0:
+               accumulated_embedding = torch.zeros(
+                (1, output.shape[-1]), dtype=torch.float32)
             cls_representation = output.last_hidden_state[:, 0, :]
             cls_representation = cls_representation.to('cpu')
-            encoded_embeddings.append(cls_representation)
+            accumulated_embedding += cls_representation
+          
+          encoded_embeddings.append(accumulated_embedding)
           
 
         # Convert to NumPy array and append to embeddings list
@@ -271,22 +276,33 @@ class EuclideanDistance(SemanticSimilarityArabic):
             
             
   def preprocess_for_faiss(self, encoded_embeddings):
-      """
+    """
     detaches each element, converts each element to numpy array.  then it converts to a C-contiguous array. finally, it stacks all the elements vertically using np.vstack    
     this is done so that the encoded sentences are compatible for faiss algorithms. it also is made compatible with sklearn cosine similarity functions
       Args: 
-        encoded_embeddings : a list of torch.Tensors which are the encoded sentences.
+        encoded_embeddings : a list of torch.Tensors which are the encoded sentences. if not list, wrapts it in list. teehee
       Returns:
         sentences_array : a np array of vertically stacked encoded sentences.
 
 
     
     """
-      embed_processed = []
-      for embeddings in encoded_embeddings:
-          embeddings = np.ascontiguousarray(embeddings.detach().numpy())
-          embed_processed.append(embeddings)
-      return np.vstack(embed_processed)
+    if not isinstance(encoded_embeddings, list):
+        # If a single sentence is provided, wrap it in a list for consistency
+        encoded_embeddings = [encoded_embeddings]
+    expected_shape = None
+    for i, sentence in enumerate(encoded_embeddings):
+      if not torch.is_tensor(sentence):
+         raise ValueError(f"Element at index {i} is not a tensor.")
+      shape = sentence.shape
+        
+        # Check if it matches the expected shape (assuming all tensors should have the same shape)
+      if expected_shape is None:
+        expected_shape = shape
+      elif shape != expected_shape:
+         raise ValueError(f"Element at index {i} has dimensions {shape}, expected {expected_shape}.")
+    
+    return np.vstack([np.ascontiguousarray(tensor.detach().numpy()).astype('float32') for tensor in encoded_embeddings])
 
 
   def calculate_similarity_matrix(self, sentences):
@@ -373,19 +389,26 @@ class EuclideanDistance(SemanticSimilarityArabic):
       k = 2  # Number of similar sentences to retrieve
       D, I = index.search(sentence_embeddings.astype('float32'), k)
       most_similar_pairs = []
+      unique_pairs = set()
       for i in range(len(sentences)):
         similar_indices = I[i]
         similarity_scores = D[i]
-        for j in range(1, k):
-          similar_idx = similar_indices[j]
-          similarity_score = similarity_scores[j]
-          most_similar_pairs.append((sentences[i], sentences[similar_idx], similarity_score))
+        top_n_indices = similar_indices[1:n + 1]  # Exclude the first index, which is the sentence itself
+        top_n_scores = similarity_scores[1:n + 1]
 
-        # Find the pair with the smallest similarity score
-        #to retrieve top n pairs, use sort() instead of max() and grab the last n elements
-      most_similar_pairs = sorted(most_similar_pairs, key=lambda x: x[2])
+        # Create a set to keep track of unique pairs
+        
 
-      return most_similar_pairs[-n:]
+        for j, sim_idx in enumerate(top_n_indices):
+            # Check if the pair is unique by comparing sorted tuples
+            pair = tuple(sorted([i, sim_idx]))
+            if pair not in unique_pairs and i!= sim_idx:
+                most_similar_pairs.append((i, sim_idx, top_n_scores[j]))
+                unique_pairs.add(pair)
+
+    
+      most_similar_pair = sorted(most_similar_pairs, key=lambda x: x[2])[-n:]
+      return most_similar_pair
 
   def find_most_similar_sentence(self, sentences, sentence):
 
@@ -512,19 +535,17 @@ class EuclideanDistance(SemanticSimilarityArabic):
 
         # Find the two most similar sentences
       k = 2  # Number of similar sentences to retrieve
-      D, I = index.search(sentence_embeddings.astype('float32'), k)
-      most_similar_pairs = []
+      D, I = index.search(sentence_embeddings, k)
+      most_similar_pair = None
+      max_similarity_score = 2
       for i in range(len(sentences)):
-        similar_indices = I[i]
-        similarity_scores = D[i]
         for j in range(1, k):
-          similar_idx = similar_indices[j]
-          similarity_score = similarity_scores[j]
-          most_similar_pairs.append((sentences[i], sentences[similar_idx], similarity_score))
+            similar_idx = I[i][j]
+            similarity_score = D[i][j]
 
-        # Find the pair with the highest similarity score
-        #to retrieve top n pairs, use sorted() instead of max() and grab the last n elements
-      most_similar_pair = min(most_similar_pairs, key=lambda x: x[2])
+            if similarity_score < max_similarity_score and i!=similar_idx:
+                max_similarity_score = similarity_score
+                most_similar_pair = (i, similar_idx, max_similarity_score)
 
       return most_similar_pair
 

@@ -264,9 +264,14 @@ class CosineSimilarity(SemanticSimilarityArabic):
             if self.gpu:
               chunk = {key: value.to('cuda') for key, value in chunk.items()}
             output = self.model(**chunk)
+            if j == 0:
+               accumulated_embedding = torch.zeros(
+                (1, output.shape[-1]), dtype=torch.float32)
             cls_representation = output.last_hidden_state[:, 0, :]
             cls_representation = cls_representation.to('cpu')
-            encoded_embeddings.append(cls_representation)
+            accumulated_embedding += cls_representation
+          
+          encoded_embeddings.append(accumulated_embedding)
           
 
         # Convert to NumPy array and append to embeddings list
