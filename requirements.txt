@@ -6,3 +6,5 @@ numpy
 faiss-cpu
 pytest
 datasets
+umap-learn
+scipy
