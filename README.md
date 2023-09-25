@@ -77,7 +77,7 @@ The first type of metrics are embedding based. This first group of metrics invol
 Our first embedding metric is Cosine Similarity. Cosine Similarity is the measure of similarity of two vectors , derived from the Euclidean dot product : $$cos(\theta) = \frac{A \cdot B}{||A|| * ||B ||}$$
 
 
-||X|| is the norm of vector X. For our discussions the norm used is the Euclidean norm, or $L^2$ norm. Its defined as $ ||x || = \sqrt{x \cdot x} $. Cosine Similarity is quiet literally the cosine of the angle formed by two vectors in n-dimensional space. For that reason, cosine similarity has a score from -1 to 1, where -1 is the opposite in meaning, 1 is the exaact same, 0 meaning the two sentences are orthogonal. For our intents and purposes, we will not have 0 in our metrics.
+||X|| is the norm of vector X. For our discussions the norm used is the Euclidean norm, or $L^2$ norm. Its defined as $ ||x || = \sqrt{x \cdot x} $ . Cosine Similarity is quiet literally the cosine of the angle formed by two vectors in n-dimensional space. For that reason, cosine similarity has a score from -1 to 1, where -1 is the opposite in meaning, 1 is the exaact same, 0 meaning the two sentences are orthogonal. For our intents and purposes, we will not have 0 in our metrics.
 
 
 The second embedding metric is Euclidean Distance. While still working with vectors to represent the texts, Eucldean distance is simply the distance of two vectors in n-dimensional space: $$d(A, B) = || A -B ||$$
