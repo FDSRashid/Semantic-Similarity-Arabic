@@ -1,6 +1,6 @@
 # Semantic-Similarity-Arabic
 
-##General Information
+## General Information
 This is a Class meant for specific functionality with Arabic Large Language Models. The class only uses three metrics for Semantic Similarity: Cosine
 Similarity , Euclidean Distance, and Jaccard Similarity (for now). It is only meant to be used with transformers that return PyTorch objects. 
 Pre-processing is done using the Camel-Tools library.
@@ -10,7 +10,7 @@ you can reduce the dimensions of the embedded texts using the dimension reducer 
 
 
 
-##How to use:
+## How to use:
 First clone this repository using this line 
 
 
@@ -51,7 +51,7 @@ These will be the most useful functions for the user. Each Class implementation 
 
 
 
-##Description of the metrics
+## Description of the metrics
 The first type of metrics are embedding based. This first group of metrics involves using a pretrained transformer to transcribe sentences as numerical vectors. Large Language Models use transformers to output sentences into fixed size numerical vectors. The size of the vector depends on the model you want to use. Typically, models output vectors that are 768 elements long. Hugging Face is the best place to find transformer models. All you need is the name of the model you want to use, as a string. Here is a example of a arabic LLM : asafaya/bert-base-arabic. Simply navigate to https://huggingface.co and the search bar to find models you want to use. Since our code assumes arabic models, be sure to find arabic models. For information on transformers, just look up the wikipedia page. It's pretty informative.
 
 
@@ -75,7 +75,7 @@ Intersection is the elements present in A and B, Union is the elements present i
 
 
 
-##Notes and updates
+## Notes and updates
 
 Important Note: I am intending to implement a class that requires datasets from camel_tools. As of the latest update, Cosine Similarity and Euclidean Distance Classes will not require these datasets. However, to implement jaccard similarity, i am using their models specifically to tokenize arabic words and split words into suffixes and prefixes as well. I've linked their github on instructions to download their data sets. Please follow their instructions strictly - issues that come from the jaccard class 
 pertaining to downloading the dataset I can't help with. Note there is different insructions for using the dataset on desktop and on google colab. Consult : https://github.com/CAMeL-Lab/camel_tools for all the needed information
@@ -86,7 +86,7 @@ is specify where you want the 'camel_tools' folder to be, in . To run it, after 
 
 Keep in mind this is downloading data, if you dont want to repeat downloading the same data and wasting space just set the environment variable to the location where you first downloadeded camel_tools. Instructions are better shown on the camel_tools documentation so i strongly recomend going there.
 
-##Authorship
+## Authorship
 Author : Ferdaws Rashid
 
 
