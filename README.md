@@ -36,7 +36,7 @@ Next, install using  the following line:
 Unless updated in future versions, this is how all metrics I implement will be named and organized.
 
 ## Usage
-For any of the classes that calculate semantic similarity (eg Cosine Similarity), these are the following functions that are available metrics:
+For any of the classes that calculate semantic similarity (eg Cosine Similarity), these are the following functions that are available for all metrics:
 
 
 
