@@ -10,7 +10,7 @@ you can reduce the dimensions of the embedded texts using the dimension reducer 
 
 
 
-## How to use:
+## How to Install:
 First clone this repository using this line 
 
 
@@ -68,6 +68,8 @@ find_most_similar_sentences: Returns a set number of most similar texts among a 
 For all of the calculation functions, preprocessing is done beforehad, so you can shove whatever text you have in there.
 These will be the most useful functions for the user. Each Class implementation has its own set of functions useful for implementing its version. Explore if you'd like!
 
+
+The classes that use a transformer model have a option that lets you send the model to a gpu, if you have one in your machine. Simply set the gpu variable to True when you instantiate a Class object, and the model will be sent to your GPU. Handy for large datasets.
 
 
 ## Description of the metrics
