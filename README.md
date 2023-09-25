@@ -37,12 +37,31 @@ Unless updated in future versions, this is how all metrics I implement will be n
 
 ## Usage
 For any of the classes that calculate semantic similarity (eg Cosine Similarity), these are the following functions that are available metrics:
+
+
+
 preprocess : Preprocess a text of arabic. It unifies all the orthographic varients of a letter, unicode varients, and removes Arabic Vowel Marks. 
+
+
+
 calculate_similarity_matrix : finds the similarity matrix of a set of texts, using the metric of the class it is defined by. It also preprocesses beforehand.
+
+
+
 find_most_similar_pair: Returns the most similar pair of texts, using the given similarity metric. Returns the score and the index of the texts.
+
+
+
 find_most_similar_pairs: Returns a specific number of the most similar pairs of texts, using the given similarity metric. Returns the score and the index of the text.
+
+
+
 find_most_similar_sentence: Returns the most similar text among a list of input texts to a single input text. Returns the most similar text and the index of the text.
+
+
+
 find_most_similar_sentences: Returns a set number of most similar texts among a list of input texts to a single input text. Returns the most similar texts and the index of the texts.
+
 
 
 
