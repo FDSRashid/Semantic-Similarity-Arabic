@@ -219,7 +219,7 @@ class EuclideanDistance(SemanticSimilarityArabic):
         sentences = [sentences]
           
       preprocessed_sentences = self.preprocess_batch(sentences)
-      max_sequence_length = min([self.tokenizer.model_max_length, self.tokenizer.max_length])  
+      max_sequence_length = self.tokenizer.model_max_length
 
       encoded_embeddings = []
       for sentence in preprocessed_sentences:
