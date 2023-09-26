@@ -8,7 +8,6 @@
 from semanticsimilarityarabic.semantic_similarity_arabic import SemanticSimilarityArabic
 import numpy as np
 import torch
-import faiss
 import os
 
 
@@ -59,8 +58,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         model_name (str): The name of the pretrained model to use for tokenizing sentences
         batch_size (int) = 10 : the size of the batches you want to process data by. depends on your computational power, and can be increased
         scheme (str)  = 'd3tok': The tokenization scheme for the model. This is a list of all the schemes: ['d2tok', 'atbtok', 'd3seg', 'bwtok', 'atbseg', 'd3tok', 'd2seg', 'd1seg', 'd1tok']
-        splits (bool) = True : wether you want the tokens as separate strings.
-        diac (bool) = True : wether you want diacritized tokens or not
+        model_args (Dict) : a dictionary of any other arguements you want to put in the Tokenizer Constructor. Examples are split : True, diac: True. 
     Dependencies:
       -transformers
       -Camel-tools
@@ -77,6 +75,9 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
         tokenize_sentence(sentence: List[str]) -> List[string]:
             morphologically tokenizes sentence according to the scheme
+
+        jaccard_similarity(tokenized1: List[str], tokenized2: List[str]) -> float :
+            finds the jaccard similarity of two tokenized sentences.
 
         calculate_similarity(sentence1 : str, sentence2: str) -> float:
             Calculates the Jaccard similarity between two sentences.
@@ -101,12 +102,13 @@ class JaccardSimilarity(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, model_name,  schemes='d3tok', batch_size = 10, splits = True, diacs = False):
+  def __init__(self, model_name,  schemes='d3tok', batch_size = 10, model_args = {'split': True}):
     if 'CAMELTOOLS_DATA' not in os.environ:
        raise ValueError('CAMELTOOLS_DATA is not set. Please follow documentation instructions to download data and set environmental variable')
     try:
       self.mle = MLEDisambiguator.pretrained(model_name)
-      self.tokenizer = MorphologicalTokenizer(self.mle, scheme=schemes, split = splits, diac = diacs )
+      self.model_args = model_args
+      self.tokenizer = MorphologicalTokenizer(self.mle, scheme=schemes, **(model_args or {}))
       self.batch_size = batch_size
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
@@ -311,7 +313,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       num_sentences = len(sentences)
 
         # Flatten the upper triangular part of the matrix (excluding the diagonal)
-      flat_similarity_scores = similarity_matrix[np.triu_indices(num_sentences, k=1)] # Use Euclidean Distance
+      flat_similarity_scores = similarity_matrix[np.triu_indices(num_sentences, k=1)] 
       
 
       # Sort the similarity scores in descending order and get the indices
@@ -360,12 +362,13 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence = self.preprocess(sentence)
-    sentences = self.preprocess_batch(sentences)
+    sentence = self.tokenize_sentence(self.preprocess(sentence))
+    sentences1 = self.preprocess_batch(sentences)
+    sentences1 = [self.tokenize_sentence(i) for i in sentences1]
     
 
     # Calculate Jaccard similarity between input sentence and all sentences in the list
-    similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences]
+    similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences1]
     most_similar_index = np.argmax(similarity_scores)
     most_similar_score = similarity_scores[most_similar_index]
 
@@ -403,9 +406,10 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         """
       if len(sentences) < 2:
           raise ValueError('List of Sentences needs to be at least 2!')
-      sentence = self.preprocess(sentence)
-      sentences = self.preprocess_batch(sentences)
-      similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences]
+      sentence = self.tokenize_sentence(self.preprocess(sentence))
+      sentences1 = self.preprocess_batch(sentences)
+      sentences1 = [self.tokenize_sentence(i) for i in sentences1]
+      similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences1]
       top_n_indices = np.argpartition(similarity_scores, n)[-n:]
       top_n_scores = [similarity_scores[idx] for idx in top_n_indices]
 
