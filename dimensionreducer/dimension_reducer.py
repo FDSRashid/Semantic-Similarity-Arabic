@@ -104,8 +104,8 @@ class DimensionReducer:
         report['Similarity'] = correlation_matrix
         skewness = skew(embedded_data, axis=1)  # Calculate skewness for each feature
         kurt = kurtosis(embedded_data, axis=1)
-        report['Skewness':skewness]
-        report['Kurtosis': kurt]
+        report['Skewness'] =skewness
+        report['Kurtosis'] = kurt
         return report
 
 
