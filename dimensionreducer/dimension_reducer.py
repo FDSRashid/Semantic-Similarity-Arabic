@@ -51,7 +51,7 @@ class DimensionReducer:
             raise ValueError(f"Unsupported method '{method}'. Supported methods are: {', '.join(available_methods)}")
         self.method = method
         self.n_components = n_components
-        self.model_args = model_args
+        self.model_args = model_args if model_args is not None else {}
         self.reduced_data = None  # Placeholder for reduced data
     def read_list(self, path):
         """
