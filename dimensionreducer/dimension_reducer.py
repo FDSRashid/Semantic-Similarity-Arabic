@@ -65,7 +65,7 @@ class DimensionReducer:
         """
         if not isinstance(path, str):
             raise ValueError('Input must be a string.')
-        data = np.genfromtxt(path, delimeter = ',', dtype = str)
+        data = np.genfromtxt(path, delimiter = ',', dtype = str)
         data = [eval(row) for row in data]
         return np.array(data)
     
