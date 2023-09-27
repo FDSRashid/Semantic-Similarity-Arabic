@@ -104,7 +104,7 @@ For i from 1 to N, and z being a set of numbers that are of size N. Essentially,
 
 
 
-The softmax function solves the first step of the Jensen-Shannon Divergence. The next is using that probability distribution. For the J-S Divergence, we will get two different probability distributions from two texts. Just like cosine similarity was a pairwise metric. The other formula that J-S requires is entropy - this measures disorder or information from a discrete probability distribution. Wouldn't you know it, softmax returns a discrete probability distribution. Entropy is defined as follows: $$H(X) = - \sum_{x \in X} p(x) * log_2 p(x) $$ So, for every invidual probability we have, we shove that into this function.
+The softmax function solves the first step of the Jensen-Shannon Divergence. The next is using that probability distribution. For the J-S Divergence, we will get two different probability distributions from two texts. Just like cosine similarity was a pairwise metric. The other formula that J-S requires is entropy - this measures disorder or information from a discrete probability distribution. Wouldn't you know it, softmax returns a discrete probability distribution. Entropy is defined as follows: $$H(X) = - \sum_{x \in X} p(x) * log_{2} p(x) $$ So, for every invidual probability we have, we shove that into this function.
 
 
 
