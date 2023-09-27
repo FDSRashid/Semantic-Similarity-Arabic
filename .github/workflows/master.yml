@@ -37,6 +37,14 @@ jobs:
             
       - name: Install dependencies from requirements.txt
         run: pip install -r requirements.txt
+
+      - name: Install camel_tools and download datasets
+        run: |
+          camel_data -i all -o ~/.camel_tools
+      
+      - name: Set CAMELTOOLS_DATA environment variable for the current session
+        run: |
+          export CAMELTOOLS_DATA=~/.camel_tools
       
       - name: Install my Python package
         run: pip install .
