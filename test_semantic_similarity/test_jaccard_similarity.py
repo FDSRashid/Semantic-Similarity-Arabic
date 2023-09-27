@@ -19,7 +19,7 @@ def test_preprocess(jaccard_similarity_instance):
 def test_tokenizer(jaccard_similarity_instance):
     input_sentence = " فسمع رجلا "
     expected_output = ['ف+', 'سمع', 'رجلا']
-    result = jaccard_similarity_instance.tokenize(input_sentence)
+    result = jaccard_similarity_instance.tokenize_sentence(input_sentence)
     assert result == expected_output
 
 
