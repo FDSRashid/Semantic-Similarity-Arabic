@@ -531,21 +531,21 @@ class EuclideanDistance(SemanticSimilarityArabic):
    
 
         # Add sentence embeddings to the index
-      index.add(sentence_embeddings.astype('float32'))
+      index.add(sentence_embeddings)
 
         # Find the two most similar sentences
       k = 2  # Number of similar sentences to retrieve
       D, I = index.search(sentence_embeddings, k)
       most_similar_pair = None
-      max_similarity_score = 2
+      max_similarity_score = float('inf')
       for i in range(len(sentences)):
-        for j in range(1, k):
-            similar_idx = I[i][j]
-            similarity_score = D[i][j]
+        for j in range(i + 1, len(sentences)):  # Avoid comparing the same pairs multiple times
+            similarity_score = faiss.vector_distance(
+                sentence_embeddings[i], sentence_embeddings[j])
 
-            if similarity_score < max_similarity_score and i!=similar_idx:
+            if similarity_score < max_similarity_score:
                 max_similarity_score = similarity_score
-                most_similar_pair = (i, similar_idx, max_similarity_score)
+                most_similar_pair = (i, j, max_similarity_score)
 
       return most_similar_pair
 
