@@ -250,7 +250,9 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
           }
           if self.gpu:
             chunk = {key: value.to('cuda') for key, value in chunk.items()}
-          output = self.model(**chunk)
+          with torch.no_grad():
+            output = self.model(**chunk)
+          
           cls_representation = output.last_hidden_state[:, 0, :]
           cls_representation = cls_representation.to('cpu')
           encoded_embeddings.append(cls_representation)
@@ -268,7 +270,8 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
             }
             if self.gpu:
               chunk = {key: value.to('cuda') for key, value in chunk.items()}
-            output = self.model(**chunk)
+            with torch.no_grad():
+              output = self.model(**chunk)
             if j == 0:
                accumulated_embedding = torch.zeros(
                 (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
