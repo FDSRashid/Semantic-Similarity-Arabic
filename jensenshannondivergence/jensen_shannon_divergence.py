@@ -329,9 +329,9 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
         float: The Jensen-Shannon Divergence between the two probability distributions.
     """
      if isinstance(prob_dist1, torch.Tensor):
-        prob_dist1 = prob_dist1.cpu().numpy()
+        prob_dist1 = prob_dist1.cpu().detach().numpy()
      if isinstance(prob_dist2, torch.Tensor):
-        prob_dist2 = prob_dist2.cpu().numpy()
+        prob_dist2 = prob_dist2.cpu().detach().numpy()
      if prob_dist1.shape != pro_dist2.shape:
         raise ValueError("Input probability distributions must have the same shape.")
      avg_dist = .5*(prob_dist1 + pro_dist2)
