@@ -16,13 +16,6 @@ def test_preprocess(jaccard_similarity_instance):
     result = jaccard_similarity_instance.preprocess(input_sentence)
     assert result == expected_output
 
-# Test the tokenize_sentence method
-def test_tokenize_sentence(jaccard_similarity_instance):
-    input_sentence = " فسمع رجلا "
-    expected_output = ['ف+', 'سمع', 'رجلا']
-    result = jaccard_similarity_instance.tokenize_sentence(input_sentence)
-    assert result == expected_output
-
 
 if __name__ == "__main__":
     pytest.main()

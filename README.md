@@ -1,8 +1,8 @@
 # Semantic-Similarity-Arabic
 
 ## General Information
-This is a Class meant for specific functionality with Arabic Large Language Models. The class only uses three metrics for Semantic Similarity: Cosine
-Similarity , Euclidean Distance, and Jaccard Similarity (for now). It is only meant to be used with transformers that return PyTorch objects. 
+This is a Class meant for specific functionality with Arabic Large Language Models. The class  uses four metrics for Semantic Similarity: Cosine
+Similarity , Euclidean Distance, , Jensen-Shannon Divergence, and Jaccard Similarity (for now). Classes that use embedding based metrics work with the transformer library and return torch tensors, so keep that in mind. 
 Pre-processing is done using the Camel-Tools library.
 This classes uses the Faiss library for optimization of comparison for encoded sentences. I will update this to have detailed descriptions
 of the models, math, and algorithms - for now, you can consult their library documentation for more details. I have included a dimension reducer module. If you have embedded texts using my class,
@@ -93,6 +93,18 @@ Speakers of Arabic know that arabic has different word forms, and complicated sy
 
 
 Intersection is the elements present in A and B, Union is the elements present in either A or B. 
+
+
+
+The forth metric is Jensen-Shannon metric. We return to the embedding method, with a little adjustment. A transformer model, when modeling a embedding for a input text, works by gradually building up a numerical representation of a text, using many layers. The output of the final layer is called last_hidden_state. Each column represents a numerical representation of contextual information, semantic meaning of a specific word or token. Note - the model does not return columns based on a 1 word/token to one columns - this is simply part of the numerical representation of the word or token. Jensen-Shannon Divergence in general is measuring the similarity between two probability distributions. In our case, we want to find the probability distribution of the columns of our embedded text. To generate the probability distribution of columns of our sentence, we apply the softmax function onto the columns of a single embedded vector. The softmax function takes a vector input of N real numbers, and returns a probability distribution consising of the same number of probabilities. The softmax function is defined for our case as follows: $$\sigma (z)_i = \frac{e^{z_i}}{\sum_{j =1}^{K} e^{zj}} $$ For i from 1 to N, and z being a set of numbers that are of size N. Essentially, for each element of our input vector - which in our case is the embedded represenataion of the text, we get a output probability. 
+
+
+
+The softmax function solves the first step of the Jensen-Shannon Divergence. The next is using that probability distribution. For the J-S Divergence, we will get two different probability distributions from two texts. Just like cosine similarity was a pairwise metric. The other formula that J-S requires is entropy - this measures disorder or information from a discrete probability distribution. Wouldn't you know it, softmax returns a discrete probability distribution. Entropy is defined as follows: $$H(X) = - \sum_{x \in X} p(x) * log_2 p(x) $$ So, for every invidual probability we have, we shove that into this function.
+
+
+
+The last step to J-S Divergence (exhale) is to plug the two probability distributions from two embedded texts into the J-S formula. Lets say we have two probability distributions A and B. Let M, the average of the two distributions, be defined as $M = \frac{1}{2}(A + B)$ . Then the Jensen-Shannon divergence of two probability distributions is as follows: $$JSD(A || B) = \frac{1}{2} H(M) - \frac{1}{2} \left(  H(A) + H(B)  \right) $$ This gets us a JS Divergence of two distributions, where 0 means minimmal divergence. For this metric, we cannot have negative divergence, and the closer to zero, the more similar the two texts are. 
 
 
 
