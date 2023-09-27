@@ -539,13 +539,11 @@ class EuclideanDistance(SemanticSimilarityArabic):
       most_similar_pair = None
       max_similarity_score = float('inf')
       for i in range(len(sentences)):
-        for j in range(i + 1, len(sentences)):  # Avoid comparing the same pairs multiple times
-            similarity_score = faiss.vector_distance(
-                sentence_embeddings[i], sentence_embeddings[j])
+        similarity_score = D[i][1]  # Get the similarity score for the second most similar sentence
 
-            if similarity_score < max_similarity_score:
-                max_similarity_score = similarity_score
-                most_similar_pair = (i, j, max_similarity_score)
+        if similarity_score < max_similarity_score:
+            max_similarity_score = similarity_score
+            most_similar_pair = (i, I[i][1], max_similarity_score)
 
       return most_similar_pair
 
