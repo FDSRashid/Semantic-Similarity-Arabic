@@ -46,7 +46,3 @@ jobs:
           camel_data -i all
           export CAMELTOOLS_DATA=~/.camel_tools
           pytest test_semantic_similarity/  
-
-
-      - name: Run pytest
-        run: pytest test_semantic_similarity/  
