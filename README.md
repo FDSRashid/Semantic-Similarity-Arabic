@@ -98,7 +98,7 @@ Intersection is the elements present in A and B, Union is the elements present i
 
 The forth metric is Jensen-Shannon metric. We return to the embedding method, with a little adjustment. A transformer model, when modeling a embedding for a input text, works by gradually building up a numerical representation of a text, using many layers. The output of the final layer is called last_hidden_state. Each column represents a numerical representation of contextual information, semantic meaning of a specific word or token. Note - the model does not return columns based on a 1 word/token to one columns - this is simply part of the numerical representation of the word or token. Jensen-Shannon Divergence in general is measuring the similarity between two probability distributions. In our case, we want to find the probability distribution of the columns of our embedded text. To generate the probability distribution of columns of our sentence, we apply the softmax function onto the columns of a single embedded vector. The softmax function takes a vector input of N real numbers, and returns a probability distribution consising of the same number of probabilities. The softmax function is defined for our case as follows:
 
-$$\sigma (z)_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}$$
+$$\sigma(z_i) = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}$$
 
 For i from 1 to N, and z being a set of numbers that are of size N. Essentially, for each element of our input vector - which in our case is the embedded represenataion of the text, we get a output probability. 
 
