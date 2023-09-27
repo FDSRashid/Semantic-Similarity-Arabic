@@ -6,8 +6,7 @@ def setup_datasets():
     subprocess.run(["camel_data", "-i", "all"])
 
     # Set the CAMELTOOLS_DATA environment variable
-    data_path = os.path.expanduser("~/.camel_tools")  # Expands '~' to the user's home directory
-    os.environ["CAMELTOOLS_DATA"] = data_path
+    os.environ["CAMELTOOLS_DATA"] = "/root/.camel_tools"
 
 
 if __name__ == "__main__":
