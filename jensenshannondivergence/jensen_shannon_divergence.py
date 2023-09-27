@@ -330,11 +330,11 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
     """
      if isinstance(prob_dist1, torch.Tensor):
         prob_dist1 = prob_dist1.cpu().detach().numpy()
-     if isinstance(prob_dist2, torch.Tensor):
-        prob_dist2 = prob_dist2.cpu().detach().numpy()
-     if prob_dist1.shape != pro_dist2.shape:
+     if isinstance(pro_dist2, torch.Tensor):
+        prob_dist2 = pro_dist2.cpu().detach().numpy()
+     if prob_dist1.shape != prob_dist2.shape:
         raise ValueError("Input probability distributions must have the same shape.")
-     avg_dist = .5*(prob_dist1 + pro_dist2)
+     avg_dist = .5*(prob_dist1 + prob_dist2)
      avg_dist = 0.5 * (prob_dist1 + prob_dist2)
      jst = 0.5 * (entropy(prob_dist1.flatten(), avg_dist.flatten()) +
                  entropy(prob_dist2.flatten(), avg_dist.flatten()))
