@@ -21,11 +21,6 @@ setup(
         'scipy'
     ],
     python_requires='>=3.7',
-    entry_points={
-        'console_scripts': [
-            'setup-datasets=Semantic-Similarity-Arabic.setup_datasets:setup_datasets',
-        ],
-    },
 )
 
 
