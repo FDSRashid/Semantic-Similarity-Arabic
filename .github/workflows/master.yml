@@ -40,10 +40,6 @@ jobs:
       
       - name: Install my Python package
         run: pip install .
-      
-      - name: Debug project directory
-        run: |
-          ls -R  # List directory contents for debugging
 
       - name: Run pytest
-        run: pytest test_semantic_similarity/  # Adjust the path to your test directory
+        run: pytest test_semantic_similarity/  

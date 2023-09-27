@@ -43,6 +43,8 @@ class JaccardSimilarity(SemanticSimilarityArabic):
   """
     A class for processing and comparing the Jaccard similarity of sentences using Arabic  Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
+    This class uses a morphological tokenizer, if you desire. for the similarity functions, there is a bool variable to specify
+    wether you want to use it.
 
 
     VERY IMPORTANT: DOWNLOAD CAMEL TOOLS DATA FROM CAMEL TOOLS AND SET A ENVIRONMENTAL VARIABLE
@@ -79,24 +81,21 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         jaccard_similarity(tokenized1: List[str], tokenized2: List[str]) -> float :
             finds the jaccard similarity of two tokenized sentences.
 
-        calculate_similarity(sentence1 : str, sentence2: str) -> float:
-            Calculates the Jaccard similarity between two sentences.
-
-        find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
+        find_most_similar_pair(sentences: List[str], tokenize:bool) -> Tuple[str, str, float]:
             Finds the two most similar sentences from a list of sentences.
 
-        find_n_similar_pair(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
+        find_n_similar_pair(sentences: List[str], n: int, tokenize:bool) -> List[Tuple[str, str, float]]:
             Finds the n most similar sentences from a list of sentences.
 
-        find_most_similar_sentence(sentences: List[str], sentence: str) -> Tuple[str, float, int]:
+        find_most_similar_sentence(sentences: List[str], sentence: str, tokenize:bool) -> Tuple[str, float, int]:
             Finds the most similar sentence for a input sentence from a list of sentences.
             returns the sentence, the similarity score, and which index of the sentence it returns
             
-        find_most_similar_sentences(sentences: List[str], sentence: str, n: int) -> Tuple[list[str], list[float], list[int]]:
+        find_most_similar_sentences(sentences: List[str], sentence: str, n: int, tokenize:bool) -> Tuple[list[str], list[float], list[int]]:
             Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
             returns a list of sentences, the similarity scores, and which number of the sentence's it returns
 
-        calculate_similarity_matrix(sentences: List[str]) ->  np.nparray :
+        calculate_similarity_matrix(sentences: List[str], tokenize: bool) ->  np.nparray :
           calculates the similarity matrix of a list of sentences, doing pre-processing as well.
           to access the similarity score of the i'th and j'th sentences, find the matrix element at
           [i, j].
@@ -230,7 +229,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
 
 
-  def calculate_similarity_matrix(self, sentences):
+  def calculate_similarity_matrix(self, sentences, tokenize = True):
     """
 
     This finds the Jaccard Similarity matrix of a list of sentences. Jaccardian Similarity is defined by the size of the intersection of two sets divided by the size
@@ -240,6 +239,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
         Args:
             sentence: A List of Strings that are the sentances you wish to find the similarity for.
+            tokenized: either True or false, wether you want to tokenize sentences or not.
             
 
         Returns:
@@ -263,7 +263,8 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         # Preprocess and encode all sentences
     num_sentences = len(sentences)
     sentences = self.preprocess_batch(sentences)
-    sentences = [self.tokenize_sentence(i) for i in sentences]
+    if tokenize:
+        sentences = [self.tokenize_sentence(i) for i in sentences]
     similarity_matrix = np.zeros((num_sentences, num_sentences))
     for i in range(num_sentences):
         for j in range(num_sentences):
@@ -274,7 +275,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     return similarity_matrix
 
 
-  def find_most_similar_pairs(self, sentences, n):
+  def find_most_similar_pairs(self, sentences, n, tokenize = True):
       """
 
     This finds a specified number of the most similar pairs using Jaccardian Distance.
@@ -286,6 +287,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Args:
             sentence: A List of Strings that are the sentances you wish to find the similarity for.
             n : the number of pairs to return. so, n = 3 would return the 3 most similar sentance pairs
+            tokenized: either True or false, wether you want to tokenize sentences or not.
             
 
         Returns:
@@ -309,7 +311,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      similarity_matrix = self.calculate_similarity_matrix(sentences)
+      similarity_matrix = self.calculate_similarity_matrix(sentences, tokenize)
       num_sentences = len(sentences)
 
         # Flatten the upper triangular part of the matrix (excluding the diagonal)
@@ -330,7 +332,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       
       return top_n_pairs
 
-  def find_most_similar_sentence(self, sentences, sentence):
+  def find_most_similar_sentence(self, sentences, sentence, tokenize = True):
 
     """
 
@@ -343,6 +345,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Args:
             sentences: A List of Strings that are the sentances you wish to find the similarity for.
             sentence: a single string that is the sentance you want to compare the list to.
+            tokenized: either True or false, wether you want to tokenize sentences or not.
             
 
         Returns:
@@ -362,9 +365,12 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence = self.tokenize_sentence(self.preprocess(sentence))
+    sentence = self.preprocess(sentence)
+    if tokenize:
+       sentence = self.tokenize_sentence(sentence)
     sentences1 = self.preprocess_batch(sentences)
-    sentences1 = [self.tokenize_sentence(i) for i in sentences1]
+    if tokenize:
+       sentences1 = [self.tokenize_sentence(i) for i in sentences1]
     
 
     # Calculate Jaccard similarity between input sentence and all sentences in the list
@@ -376,7 +382,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
 
 
-  def find_most_similar_sentences(self, sentences, sentence, n = 2):
+  def find_most_similar_sentences(self, sentences, sentence, n = 2, tokenize = True):
       """
 
     This finds  the most similasr sentence from a list of sentances. You input a sentance to co
@@ -389,6 +395,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
             sentences: A List of Strings that are the sentances you wish to find the similarity for.
             sentence: a single string that is the sentance you want to compare the list to.
             n: the number of the most similar_sentences to return
+            tokenized: either True or false, wether you want to tokenize sentences or not.
             
 
         Returns:
@@ -406,9 +413,12 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         """
       if len(sentences) < 2:
           raise ValueError('List of Sentences needs to be at least 2!')
-      sentence = self.tokenize_sentence(self.preprocess(sentence))
+      sentence = self.preprocess(sentence)
+      if tokenize:
+         sentence = self.tokenize_sentence(sentence)
       sentences1 = self.preprocess_batch(sentences)
-      sentences1 = [self.tokenize_sentence(i) for i in sentences1]
+      if tokenize:
+        sentences1 = [self.tokenize_sentence(i) for i in sentences1]
       similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences1]
       top_n_indices = np.argpartition(similarity_scores, n)[-n:]
       top_n_scores = [similarity_scores[idx] for idx in top_n_indices]
@@ -419,7 +429,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       return top_n_sentences, top_n_scores, top_n_indices
 
     
-  def find_most_similar_pair(self, sentences):
+  def find_most_similar_pair(self, sentences, tokenized = True):
       """
 
     This finds the most similar pairs using Jaccardian Similarity.
@@ -428,6 +438,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
         Args:
             sentence: A List of Strings that are the sentances you wish to find the similarity for.
+            tokenized: either True or false, wether you want to tokenize sentences or not.
             
             
 
@@ -446,6 +457,6 @@ class JaccardSimilarity(SemanticSimilarityArabic):
  )"
         """ 
       
-      sim_sentance = self.find_most_similar_pairs(sentences, 1)
+      sim_sentance = self.find_most_similar_pairs(sentences, 1, tokenize = tokenized)
       return sim_sentance[0]
 
