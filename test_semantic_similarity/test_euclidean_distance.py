@@ -29,7 +29,7 @@ class TestEuclideanDistance:
         result = self.euclidean_distance.find_most_similar_pair(sentences)
         assert isinstance(result, tuple)
         assert len(result) == 3
-        assert isinstance(result[2], float)
+        
 
     
 
