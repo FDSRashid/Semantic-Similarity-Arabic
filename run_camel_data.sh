@@ -13,5 +13,5 @@ mkdir -p "$datasets_folder/camel_tools"
 export CAMEL_TOOLS_DATA="$datasets_folder/camel_tools"
 
 # Install camel-tools packages
-camel_data -i all
+export | camel_data -i all
 
