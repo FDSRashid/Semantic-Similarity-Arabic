@@ -84,7 +84,7 @@ class WordMoversDistance(SemanticSimilarityArabic):
         self.word_vectors = self.model.wv
         warnings.filterwarnings("ignore", category=DeprecationWarning, module="jax._src.xla_bridge")
         np_config.enable_numpy_behavior()
-        os.environ["JAX_PLATFORM_NAME"] = "cpu"
+        
     def download_model(self, model_name):
         """
         Downloads and unzips a Word2Vec model.

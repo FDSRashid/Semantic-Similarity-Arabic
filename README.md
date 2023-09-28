@@ -5,8 +5,8 @@
 # Semantic-Similarity-Arabic
 
 ## General Information
-This is a Class meant for specific functionality with Arabic Large Language Models. The class  uses four metrics for Semantic Similarity: Cosine
-Similarity , Euclidean Distance, , Jensen-Shannon Divergence, and Jaccard Similarity (for now). Classes that use embedding based metrics work with the transformer library and return torch tensors, so keep that in mind. 
+This is a Class meant for specific functionality with Arabic Large Language Models. The class  uses five metrics for Semantic Similarity: Cosine
+Similarity , Euclidean Distance, , Jensen-Shannon Divergence, Word-Movers-Distance, and Jaccard Similarity (for now). Classes that use embedding based metrics work with the transformer library and return torch tensors, so keep that in mind. The Word Movers Distance Class only uses the Aravec models, as there is only one repository i could find that had a word to vector model in Arabic.
 Pre-processing is done using the Camel-Tools library.
 This classes uses the Faiss library for optimization of comparison for encoded sentences. I will update this to have detailed descriptions
 of the models, math, and algorithms - for now, you can consult their library documentation for more details. I have included a dimension reducer module. If you have embedded texts using my class,
@@ -103,7 +103,7 @@ Intersection is the elements present in A and B, Union is the elements present i
 
 
 
-The forth metric is Jensen-Shannon metric. We return to the embedding method, with a little adjustment. A transformer model, when modeling a embedding for a input text, works by gradually building up a numerical representation of a text, using many layers. The output of the final layer is called last_hidden_state. Each column represents a numerical representation of contextual information, semantic meaning of a specific word or token. Note - the model does not return columns based on a 1 word/token to one columns - this is simply part of the numerical representation of the word or token. Jensen-Shannon Divergence in general is measuring the similarity between two probability distributions. In our case, we want to find the probability distribution of the columns of our embedded text. To generate the probability distribution of columns of our sentence, we apply the softmax function onto the columns of a single embedded vector. The softmax function takes a vector input of N real numbers, and returns a probability distribution consising of the same number of probabilities. The softmax function is defined for our case as follows:
+The forth metric is Jensen-Shannon metric. We return to the embedding method, with a little adjustment. A transformer model, when modeling a embedding for a input text, works by gradually building up a numerical representation of a text, using many layers. The output of the final layer is called last_hidden_state. Each column represents a numerical representation of contextual information, semantic meaning of a specific word or token. Note - the model does not return columns based on a 1 word/token to one columns - layers of information are stored in the embeddings. Jensen-Shannon Divergence in general is measuring the similarity between two probability distributions. In our case, we want to find the probability distribution of the columns of our embedded text. To generate the probability distribution of columns of our sentence, we apply the softmax function onto the columns of a single embedded vector. The softmax function takes a vector input of N real numbers, and returns a probability distribution consising of the same number of probabilities. The softmax function is defined for our case as follows:
 
 $$\sigma(z_i) = \frac{e^{z_i}}{\sum_{ j \in N} e^{z_j}}$$
 
@@ -118,6 +118,13 @@ The softmax function solves the first step of the Jensen-Shannon Divergence. The
 The last step to J-S Divergence (exhale) is to plug the two probability distributions from two embedded texts into the J-S formula. Lets say we have two probability distributions A and B. Let M, the average of the two distributions, be defined as $M = \frac{1}{2}(A + B)$ . Then the Jensen-Shannon divergence of two probability distributions is as follows: $$JSD(A || B) = \frac{1}{2} H(M) - \frac{1}{2} \left(  H(A) + H(B)  \right) $$ This gets us a JS Divergence of two distributions, where 0 means minimmal divergence. For this metric, we cannot have negative divergence, and the closer to zero, the more similar the two texts are. 
 
 
+Metric Number 4 is Word-Movers Distance. We are using a different type of language model for this, a word2vector model. These models convert words or phrases into vector represenations. Essentially, over the training data, these models develop a vocabulary set and a numerical representation of each word it takes in.  W2Vec models have two types: Continuous Bag of Words (CBOW) and Skip-gram. We are only using Arabic W2Vec models, and i could only find 1 - so we are limiting our options to that one repository , Aravec. Aravec has models based on CBOW and SKip-gram, models trained on wikipedia articles and tweets, and different models based on how long you want each embedded vector to be. Just know that their Wikipedia Skipgram model for unigram models dont work. 
+
+The Word Movers Distance metric requires embeddings which map words to vectors - hence word2vec embeddings like Aravec are needed. It is simply the minimum distance to traverse words from text A to text B. It's based on the earth mover's distance, a measure of distance between two frequency distributions. For more information, consider looking at their documentation : https://radimrehurek.com/gensim/auto_examples/tutorials/run_wmd.html#. For our purposes, the closer the score is to zero, the more similar the texts are. 
+
+
+
+
 
 ## Notes and updates
 
@@ -127,7 +134,7 @@ pertaining to downloading the camel-tools dataset I can't help with. Note there 
 
 
 As a TLDR  - you can download their datasets using this command line `camel_data -i all`. Then,
-to set the environment variable as per their instructions you can do this `env CAMELTOOLS_DATA=/root/.camel_tools` . Note that Colab requires % before the shell, and ! before command lines. 
+to set the environment variable as per their instructions you can do this shell line: `env CAMELTOOLS_DATA=/root/.camel_tools` . Note that Colab requires % before the shell, and ! before command lines. 
 
 
 Keep in mind this is downloading data, if you dont want to repeat downloading the same data and wasting space just set the environment variable to the location where you first downloadeded camel_tools. Instructions are better shown on the camel_tools documentation so i strongly recomend going there.
