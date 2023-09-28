@@ -8,3 +8,4 @@ pytest
 datasets
 umap-learn
 scipy
+gensim

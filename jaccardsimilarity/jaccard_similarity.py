@@ -17,7 +17,7 @@ from camel_tools.utils.normalize import normalize_alef_maksura_ar
 from camel_tools.utils.normalize import normalize_alef_ar
 from camel_tools.utils.normalize import normalize_teh_marbuta_ar
 from camel_tools.utils.dediac import dediac_ar
-from transformers import AutoTokenizer, AutoModel
+
 #from google.colab import drive
 #drive.mount('/gdrive')
 #os.environ['CAMELTOOLS_DATA'] = '/gdrive/MyDrive/camel_tools'
@@ -299,7 +299,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
             Example usage of find_most_similar_pairs:
             
             >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
-            >>> result = model.find_n_similar_pair(sentences, 2)
+            >>> result = model.find_most_similar_pairs(sentences, 2)
             >>> print(result)
             "[( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
    إِذَا تَوَضَّأَ الْعَبْدُ الْمُسْلِمُ فَغَسَلَ وَجْهَهُ خَرَجَ مِنْ وَجْهِهِ كُلُّ خَطِيئَةٍ نَظَرَ إِلَيْهَا بِعَيْنِهِ آخِرَ قَطْرِ الْمَاءِ ، فَإِذَا غَسَلَ يَدَيْهِ خَرَجَتْ مِنْهُمَا كُلُّ خَطِيئَةٍ بَطَشَهَا بِهِمَا ، ثُمَّ كَذَلِكَ حَتَّى يَخْرُجَ نَقِيًّا مِنَ الذُّنُوبِ ,
@@ -405,7 +405,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = EuclideanDistance("CAMeL-Lab/bert-base-arabic-camelbert-ca'") #default size of batch is 10
+            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
             >>> strings, scores, idxs = model.find_most_similar_sentences(list of sentences, sentence , 2)
             >>> print(len(scores))
             >>> 2
