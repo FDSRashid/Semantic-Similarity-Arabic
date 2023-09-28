@@ -89,11 +89,10 @@ class WordMoversDistance(SemanticSimilarityArabic):
         """
         # Define the URL and file names
         url = f"https://bakrianoo.ewr1.vultrobjects.com/aravec/{model_name}.zip"
-        zip_file = f"{model_name}.zip"
         
         # Download the model zip file
         subprocess.run(["wget", url, "-P", self.model_dir])
-        
+        zip_file = os.path.abspath(os.path.join(self.model_dir, f"{model_name}.zip"))
         # Unzip the model
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
             zip_ref.extractall(self.model_dir)
