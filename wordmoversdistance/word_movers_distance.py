@@ -21,13 +21,16 @@ class WordMoversDistance(SemanticSimilarityArabic):
     """
     WordMoversDistance class for semantic similarity computation using Word Movers Distance.
     Important note: this class only uses models from the AraVec library. Consult this for more
-    information : https://github.com/bakrianoo/aravec. 
-    There are 16 different models, based on n-grams and unigrams, based on wikipedia or twitter from the
+    information : https://github.com/bakrianoo/aravec. This is because theres literally only one large Word 2 vector model with arabic.
+    There are 15 different models, based on n-grams and unigrams, based on wikipedia or twitter from the
     data, vector size of 300 or 100. Please go to the link above for the full details. 
+    Important note : the unigram wikipedia model for 100 vectors doesnt work. i took it off the available models. 
 
     Args:
         model_name (str): The name of the Word2Vec model to load.
         batch_size (int): The batch size for preprocessing a list of sentences (default is 10).
+        model_dir (string) : the location to put the models. if the directory path doesnt exist, it makes one.
+    
     """
     AVAILABLE_MODELS = [
         'full_grams_cbow_100_twitter',
@@ -37,7 +40,6 @@ class WordMoversDistance(SemanticSimilarityArabic):
         'full_uni_cbow_300_wiki',
         'full_uni_cbow_100_wiki',
         'full_uni_sg_300_wiki',
-        'full_uni_sg_100_wiki',
         'full_grams_sg_300_twitter',
         'full_grams_sg_100_twitter',
         'full_grams_cbow_300_wiki',
@@ -48,17 +50,19 @@ class WordMoversDistance(SemanticSimilarityArabic):
         'full_uni_cbow_100_twitter'
     ]
 
-    def __init__(self, model_name, batch_size = 10):
+    def __init__(self, model_name, batch_size = 10, model_dir="./model_gensim"):
         """
         Initializes the WordMoversDistance class.
 
         Args:
             model_name (str): The name of the Word2Vec model to load.
             batch_size (int): The batch size for preprocessing a list of sentences.
+            model_dir (string) : the location to put the models
         """
         if model_name not in self.AVAILABLE_MODELS:
             raise ValueError(f"Model '{model_name}' is not available. Choose from: {', '.join(self.AVAILABLE_MODELS)}")
-        self.model_path = f"{model_name}.mdl"
+        self.model_dir = model_dir
+        self.model_path = os.path.join(self.model_dir, f"{model_name}.mdl")
         self.batch_size = batch_size
         
         # Check if the model file exists; if not, download and unzip it
