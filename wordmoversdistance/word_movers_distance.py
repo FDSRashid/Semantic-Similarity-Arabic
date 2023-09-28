@@ -180,7 +180,7 @@ class WordMoversDistance(SemanticSimilarityArabic):
           preprocessed_sentences.extend(preprocessed_batch)
 
         return preprocessed_sentences
-    def tokenize_text(sentence):
+    def tokenize(self, sentence):
         """
         Tokenizes a sentence into words.
 
@@ -202,8 +202,8 @@ class WordMoversDistance(SemanticSimilarityArabic):
         Returns:
             similarity (float): The semantic similarity score between the two texts.
         """
-        tokens1 = self.tokenize_text(self.preprocess(text1))  
-        tokens2 = self.tokenize_text(self.preprocess(text2)) 
+        tokens1 = self.tokenize(self.preprocess(text1))  
+        tokens2 = self.tokenize(self.preprocess(text2)) 
 
         # Calculate the WMD using WordEmbeddingsKeyedVectors
         try:
