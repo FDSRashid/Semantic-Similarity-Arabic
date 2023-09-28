@@ -11,6 +11,7 @@ from camel_tools.utils.normalize import normalize_alef_ar
 from camel_tools.utils.normalize import normalize_teh_marbuta_ar
 from camel_tools.utils.dediac import dediac_ar
 from camel_tools.tokenizers.word import simple_word_tokenize
+from tensorflow.python.ops.numpy_ops import np_config
 
 
 
@@ -71,6 +72,9 @@ class WordMoversDistance(SemanticSimilarityArabic):
         # Check if the model file exists; if not, download and unzip it
         if not os.path.exists(self.model_path):
             self.download_model(model_name)
+
+        # Activate the TensorFlow NumPy API
+        np_config.enable_numpy_behavior()
         
         # Load the model
         self.model = gensim.models.Word2Vec.load(self.model_path)

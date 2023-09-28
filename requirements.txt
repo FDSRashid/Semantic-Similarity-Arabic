@@ -9,3 +9,5 @@ datasets
 umap-learn
 scipy
 gensim
+pot
+tensorflow
