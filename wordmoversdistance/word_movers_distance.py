@@ -2,6 +2,7 @@ import os
 import subprocess
 from semanticsimilarityarabic.semantic_similarity_arabic import SemanticSimilarityArabic
 import numpy as np
+import zipfile
 import gensim
 from camel_tools.utils.charmap import CharMapper
 from camel_tools.utils.normalize import normalize_unicode
@@ -87,10 +88,11 @@ class WordMoversDistance(SemanticSimilarityArabic):
         zip_file = f"{model_name}.zip"
         
         # Download the model zip file
-        subprocess.run(["wget", url])
+        subprocess.run(["wget", url, "-P", self.model_dir])
         
         # Unzip the model
-        subprocess.run(["unzip", zip_file])
+        with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+            zip_ref.extractall(self.model_dir)
         
         # Remove the zip file
         os.remove(zip_file)
