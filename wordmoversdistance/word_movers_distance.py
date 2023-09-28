@@ -180,7 +180,7 @@ class WordMoversDistance(SemanticSimilarityArabic):
           preprocessed_sentences.extend(preprocessed_batch)
 
         return preprocessed_sentences
-    def tokenize(sentence):
+    def tokenize_text(sentence):
         """
         Tokenizes a sentence into words.
 
