@@ -19,7 +19,8 @@ setup(
         'datasets',
         'umap-learn',
         'scipy',
-        'gensim'
+        'gensim',
+        'pot'
     ],
     python_requires='>=3.7',
 )
