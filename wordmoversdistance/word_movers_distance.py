@@ -61,10 +61,11 @@ class WordMoversDistance(SemanticSimilarityArabic):
         """
         if model_name not in self.AVAILABLE_MODELS:
             raise ValueError(f"Model '{model_name}' is not available. Choose from: {', '.join(self.AVAILABLE_MODELS)}")
+        os.makedirs(self.model_dir, exist_ok=True)
         self.model_dir = model_dir
         self.model_path = os.path.join(self.model_dir, f"{model_name}.mdl")
         self.batch_size = batch_size
-        os.makedirs(self.model_dir, exist_ok=True)
+        
         
         # Check if the model file exists; if not, download and unzip it
         if not os.path.exists(self.model_path):
