@@ -1,3 +1,7 @@
+[![CI](https://github.com/FDSRashid/Semantic-Similarity-Arabic/actions/workflows/master.yml/badge.svg)](https://github.com/FDSRashid/Semantic-Similarity-Arabic/actions/workflows/master.yml)
+
+
+
 # Semantic-Similarity-Arabic
 
 ## General Information
