@@ -14,7 +14,7 @@ you can reduce the dimensions of the embedded texts using the dimension reducer 
 
 
 
-Please note: The classes that use transformers require Autotokenizers and Automodels from the Hugging Face Library. So long as the model you want to use has those models, you can use them here. Simply go to https://huggingface.co , search arabic models, and the ones with Autokenizers and Automodels can be used here. 
+Please note: The classes that use transformers require tokenizers and models from the Hugging Face Library. So long as the model you want to use has those models, you can use them here. Simply go to https://huggingface.co , search arabic models, and the string of the name of the model can be used as the input for these classes. 
 
 
 ## How to Install:
