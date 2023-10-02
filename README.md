@@ -134,7 +134,7 @@ pertaining to downloading the camel-tools dataset I can't help with. Note there 
 
 
 As a TLDR  - you can download their datasets using this command line `camel_data -i all`. Then,
-to set the environment variable as per their instructions you can do this shell line: `env CAMELTOOLS_DATA=/root/.camel_tools` . Note that Colab requires % before the shell, and ! before command lines. 
+to set the environment variable as per their instructions you can do this shell line: `env CAMELTOOLS_DATA=/path_to/camel_tools` . Note that Colab requires % before the shell, and ! before command lines. 
 
 
 Keep in mind this is downloading data, if you dont want to repeat downloading the same data and wasting space just set the environment variable to the location where you first downloadeded camel_tools. Instructions are better shown on the camel_tools documentation so i strongly recomend going there.
