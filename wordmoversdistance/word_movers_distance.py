@@ -234,7 +234,7 @@ class WordMoversDistance(SemanticSimilarityArabic):
         if not isinstance(sentences, list) or len(sentences) < 2:
             raise ValueError("Input must be a list of at least two sentences")
         num_sentences = len(sentences)
-        similarity_matrix = np.zeros((num_sentences, num_sentences), dtype=float)
+        similarity_matrix = np.zeros((num_sentences, num_sentences), dtype=float32)
 
         for i in range(num_sentences):
             for j in range(i, num_sentences):
