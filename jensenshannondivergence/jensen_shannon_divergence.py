@@ -319,7 +319,7 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
          raise ValueError(f"Element at index {i} has dimensions {shape}, expected {expected_shape}.")
     
     return [torch.softmax(i, dim = 1) for i in encoded_embeddings]
-  def divergence(self, prob_dist1, pro_dist2):
+  def divergence(self, prob_dist1, prob_dist2):
      """
     Calculates the Jensen-Shannon Divergence between two probability distributions. Remember this is calculating divergence- the closer to 
     zero, the more similar the texts.
@@ -333,8 +333,8 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
     """
      if isinstance(prob_dist1, torch.Tensor):
         prob_dist1 = prob_dist1.cpu().detach().numpy()
-     if isinstance(pro_dist2, torch.Tensor):
-        prob_dist2 = pro_dist2.cpu().detach().numpy()
+     if isinstance(prob_dist2, torch.Tensor):
+        prob_dist2 = prob_dist2.cpu().detach().numpy()
      if prob_dist1.shape != prob_dist2.shape:
         raise ValueError("Input probability distributions must have the same shape.")
      avg_dist = .5*(prob_dist1 + prob_dist2)
