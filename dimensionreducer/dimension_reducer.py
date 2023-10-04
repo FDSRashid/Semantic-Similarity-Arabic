@@ -150,7 +150,7 @@ class DimensionReducer:
         Returns:
         - numpy.ndarray: The reduced representation of the data.
         """
-        if not self.reduced_data:
-            raise ValueError('Data Has not been reduced. Please reduce data first using reduce_dimension()')
+        if self.reduced_data is None or self.reduced_data.size == 0:
+            raise ValueError('Data has not been reduced. Please reduce data first using reduce_dimension()')
             
         return self.reduced_data
