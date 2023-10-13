@@ -302,7 +302,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             (1, 768)
         """  
       if isinstance(sentences, str):
-         sentences = [sentence]
+         sentences = [sentences]
       if not isinstance(sentences, list):
         # If a single sentence is provided, wrap it in a list for consistency
         sentences = list(sentences)
