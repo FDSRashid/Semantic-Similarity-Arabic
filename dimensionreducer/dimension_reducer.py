@@ -52,6 +52,7 @@ class DimensionReducer:
         self.method = method
         self.n_components = n_components
         self.model_args = model_args if model_args is not None else {}
+        self.reducer = None
         self.reduced_data = None  # Placeholder for reduced data
     def read_list(self, path):
         """
@@ -120,26 +121,26 @@ class DimensionReducer:
         - embedded_data (numpy.ndarray): The input data containing embedded sentences.
         """
         if self.method == 'PCA':
-            reducer = PCA(n_components=self.n_components, **self.model_args)
+            self.reducer = PCA(n_components=self.n_components, **self.model_args)
         elif self.method == 't-SNE':
-            reducer = TSNE(n_components=self.n_components, **self.model_args)
+            self.reducer = TSNE(n_components=self.n_components, **self.model_args)
         elif self.method == 'UMAP':
-            reducer = UMAP(n_components = self.n_components, **self.model_args)
+            self.reducer = UMAP(n_components = self.n_components, **self.model_args)
         elif self.method == 'KernelPCA':
-            reducer = KernelPCA(n_components=self.n_components, **self.model_args)
+            self.reducer = KernelPCA(n_components=self.n_components, **self.model_args)
         elif self.method == 'RandomProjection':
-            reducer = GaussianRandomProjection(n_components=self.n_components, **self.model_args)
+            self.reducer = GaussianRandomProjection(n_components=self.n_components, **self.model_args)
         elif self.method == 'PCA_SVD':
-            reducer = PCA(n_components=self.n_components, svd_solver = 'randomized', **self.model_args)
+            self.reducer = PCA(n_components=self.n_components, svd_solver = 'randomized', **self.model_args)
         elif self.method == 'DictionaryLearning':
-            reducer = DictionaryLearning(n_components=self.n_components, **self.model_args)
+            self.reducer = DictionaryLearning(n_components=self.n_components, **self.model_args)
         elif self.method == 'KMeans':
             # Perform K-Means clustering to get cluster assignments
             kmeans = KMeans(n_clusters=self.n_components)
             cluster_labels = kmeans.fit_predict(embedded_data)
             self.reduced_data = cluster_labels  # Use cluster labels as the reduced representation
             return
-        self.reduced_data = reducer.fit_transform(embedded_data)
+        self.reduced_data = self.reducer.fit_transform(embedded_data)
         
     
 
