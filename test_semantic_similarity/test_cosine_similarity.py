@@ -37,13 +37,13 @@ def test_preprocess():
 
 def test_encode():
     model = CosineSimilarity('CAMeL-Lab/bert-base-arabic-camelbert-ca')
-    encoded = model.encode_sentences('هل ذهبت الي المكتبه؟')
+    encoded = model.embed_sentences('هل ذهبت الي المكتبه؟')
     assert type(encoded) == list
     assert torch.is_tensor(encoded[0])
 
 def test_preprocess_faiss():
     model = CosineSimilarity('CAMeL-Lab/bert-base-arabic-camelbert-ca')
-    arr = model.preprocess_for_faiss(model.encode_sentences('هل ذهبت الي المكتبه؟'))
+    arr = model.preprocess_for_faiss(model.embed_sentences('هل ذهبت الي المكتبه؟'))
     assert type(arr) == np.ndarray
     assert arr.flags['C_CONTIGUOUS']
 
