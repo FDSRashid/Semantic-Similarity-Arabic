@@ -378,7 +378,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
     """
     if not isinstance(encoded_embeddings, list):
         # If a single sentence is provided, wrap it in a list for consistency
-        encoded_embeddings = list(encoded_embeddings)
+        encoded_embeddings = [encoded_embeddings]
     expected_shape = None
     for i, sentence in enumerate(encoded_embeddings):
       if not torch.is_tensor(sentence):
