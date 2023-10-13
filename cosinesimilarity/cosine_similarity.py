@@ -74,34 +74,34 @@ class CosineSimilarity(SemanticSimilarityArabic):
 
     Methods:
         preprocess(sentence: str) -> str:
-            Preprocesses a sentence before encoding.
+            Preprocesses a text before encoding.
             
         preprocess_batch(sentences: List[str]) -> List[str]:
-          Preprocesses a  batch of sentences before encoding.
+          Preprocesses a  batch of texts before encoding.
 
-        encode_sentences(sentence: List[str]) -> List[torch.Tensor]:
-            Encodes a  list of sentences to a embeding. returns a list of respective tensors. be careful how its used. 
+        embedd_sentences(sentence: iterable[str]) -> List[torch.Tensor]:
+            Embeds a  iterable of strings texts to a embeding. returns a list of respective tensors. be careful how its used. 
 
         find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
-            Finds the two most similar sentences from a list of sentences.
+            Finds the two most similar texts from a list of texts.
 
         find_most_similar_pairs(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
-            Finds the n most similar sentences from a list of sentences.
+            Finds the n most similar texts from a list of texts.
 
         find_most_similar_sentence(sentences: List[str], sentence: str) -> Tuple[str, float, int]:
-            Finds the most similar sentence for a input sentence from a list of sentences.
-            returns the sentence, the similarity score, and which number of the sentence it returns
+            Finds the most similar text for a input text from a list of text.
+            returns the text, the similarity score, and index of the text it returns
             
 
         preprocess_for_faiss(embedded_sentences: List[torch.Tensor]) -> np.ndarray
-            make a C-contiguous array of encoded sentences for similarity calculations
+            make a C-contiguous array of encoded text for similarity calculations
 
-        find_most_similar_sentences(sentences: List[str], sentence: str, n: int) -> Tuple[list[str], list[float], list[int]]:
-            Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
-            returns a list of sentences, the similarity scores, and which number of the sentence's it returns
+        find_most_similar_sentences(texts: List[str], sentence: str, n: int) -> Tuple[list[str], list[float], list[int]]:
+            Finds the number n of the most similar texts's for a input sentence from a list of texts.
+            returns a list of texts, the similarity scores, and which number of the texts's it returns
 
         calculate_similarity_matrix(sentences: List[str]) ->  np.nparray :
-          calculates the similarity matrix of a list of sentences, doing pre-processing as well.
+          calculates the similarity matrix of a list of texts, doing pre-processing as well.
           to access the similarity score of the i'th and j'th sentences, find the matrix element at
           [i, j].
 
@@ -180,7 +180,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
 
     if not isinstance(sentences, list):
         # If a single sentence is provided, wrap it in a list for consistency
-      sentences = [sentences]
+      sentences = list(sentences)
 
     preprocessed_sentences = []
 
@@ -199,9 +199,88 @@ class CosineSimilarity(SemanticSimilarityArabic):
       preprocessed_sentences.extend(preprocessed_batch)
 
     return preprocessed_sentences
+  
+  def embed_sentence(self, sentence):
+       
+      """
+        Embeds a sentence, using the Pre-Trained Model defined by the Class Instantiation. For example, you can put 'Camel-Bert' as the model you want to use 
+        and it will use their model. Please consult the source of the model you are using - this class assumes that the model will return features in PyTorch. To learn more about Hosted
+        Large Language Models, consult https://huggingface.co And look at examples on how to use a tokenizer. 
 
-  def encode_sentences(self, sentences):
-        # Preprocess all sentences in a batch
+        Args:
+            sentence: A single String that is the text you want to embed
+            
+
+        Returns:
+            embedded_sentences torch.Tensor : the embedded sentence
+
+        Example:
+            Example usage of encode_sentences:
+            
+            >>> model = CosineSimilarity("CAMeL-Lab/bert-base-arabic-camelbert-ca") #default size of batch is 10
+            >>> result = model.encode_sentences(" فَسَمِعَ رَجُلا ")
+            >>> print(result.shape)
+            (1, 768)
+        """  
+      
+          
+      preprocessed_sentences = self.preprocess(sentence)
+      max_sequence_length = self.tokenizer.model_max_length
+
+      encoded_embeddings = []
+      
+      tokenized_sentence = self.tokenizer(preprocessed_sentences, return_tensors = 'pt', padding = True)
+          
+      input_ids = tokenized_sentence['input_ids']
+      attention_mask = tokenized_sentence['attention_mask']
+      token_type_ids = tokenized_sentence['token_type_ids']
+      if input_ids.shape[1] <= max_sequence_length:
+        # Process the entire sentence
+        chunk = {
+          'input_ids': input_ids,
+          'attention_mask': attention_mask,
+          'token_type_ids': token_type_ids
+        }
+        if self.gpu:
+          chunk = {key: value.to('cuda') for key, value in chunk.items()}
+        with torch.no_grad():
+          output = self.model(**chunk)
+        cls_representation = output.last_hidden_state[:, 0, :]
+        cls_representation = cls_representation.to('cpu')
+        encoded_embeddings.append(cls_representation)
+      else:
+          # Truncate the sentence into chunks and process them separately
+          
+        for j in range(0, input_ids.shape[1], max_sequence_length):
+          chunk_input_ids = input_ids[:, j:j + max_sequence_length]
+          chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
+          chunk_token_type_ids = token_type_ids[:, j:j + max_sequence_length]
+          chunk = {
+              'input_ids': chunk_input_ids,
+              'attention_mask': chunk_attention_mask,
+              'token_type_ids': chunk_token_type_ids
+          }
+          if self.gpu:
+            chunk = {key: value.to('cuda') for key, value in chunk.items()}
+          with torch.no_grad():
+            output = self.model(**chunk)
+          if j == 0:
+              accumulated_embedding = torch.zeros(
+              (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
+          cls_representation = output.last_hidden_state[:, 0, :]
+          cls_representation = cls_representation.to('cpu')
+          accumulated_embedding += cls_representation
+          
+        encoded_embeddings.append(accumulated_embedding)
+          
+
+        
+          
+          
+      return encoded_embeddings[0]
+
+  def embed_sentences(self, sentences):
+        # embeds all sentences in a batch
       """
         Encodes a Sentence or List of Sentences uses the Pre-Trained Model defined by the Class Instantiation. For example, you can put 'Camel-Bert' as the model you want to use 
         and it will use their model. Please consult the source of the model you are using - this class assumes that the model will return features in PyTorch. To learn more about Hosted
@@ -224,7 +303,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         """  
       if not isinstance(sentences, list):
         # If a single sentence is provided, wrap it in a list for consistency
-        sentences = [sentences]
+        sentences = list(sentences)
           
       preprocessed_sentences = self.preprocess_batch(sentences)
       max_sequence_length = self.tokenizer.model_max_length
@@ -299,7 +378,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
     """
     if not isinstance(encoded_embeddings, list):
         # If a single sentence is provided, wrap it in a list for consistency
-        encoded_embeddings = [encoded_embeddings]
+        encoded_embeddings = list(encoded_embeddings)
     expected_shape = None
     for i, sentence in enumerate(encoded_embeddings):
       if not torch.is_tensor(sentence):
@@ -345,7 +424,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
+    sentence_embeddings = self.preprocess_for_faiss(self.embed_sentences(sentences))
     return cosine_similarity(sentence_embeddings)
 
 
@@ -385,7 +464,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             raise ValueError("The value of 'n' must be greater than 0")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
+      sentence_embeddings = self.preprocess_for_faiss(self.embed_sentences(sentences))
 
         # Calculate pairwise similarities
       index = faiss.IndexFlatIP(sentence_embeddings.shape[1])  # Use inner product (cosine similarity)
@@ -451,8 +530,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
       raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-    sentences_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
-    sentence_embedding = self.preprocess_for_faiss(self.encode_sentences(sentence))
+    sentences_embeddings = self.preprocess_for_faiss(self.embed_sentences(sentences))
+    sentence_embedding = self.preprocess_for_faiss(self.embed_sentences(sentence))
     similarities = cosine_similarity(sentence_embedding, sentences_embeddings)[0]
     most_similar_index = np.argmax(similarities)
     most_similar_sentence = sentences[most_similar_index]
@@ -495,8 +574,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
       if n > len(sentences):
         raise ValueError("'n' cannot be greater than the number of sentences in the list.")
   
-      encoded_sentences = self.preprocess_for_faiss(self.encode_sentences(sentences))
-      encoded_sentence = self.preprocess_for_faiss(self.encode_sentences(sentence)) 
+      encoded_sentences = self.preprocess_for_faiss(self.embed_sentences(sentences))
+      encoded_sentence = self.preprocess_for_faiss(self.embed_sentences(sentence)) 
       index = faiss.IndexFlatIP(encoded_sentences.shape[1])
       faiss.normalize_L2(encoded_sentences)
       faiss.normalize_L2(encoded_sentence)
@@ -540,7 +619,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      sentence_embeddings = self.preprocess_for_faiss(self.encode_sentences(sentences))
+      sentence_embeddings = self.preprocess_for_faiss(self.embed_sentences(sentences))
 
         # Calculate pairwise similarities
       index = faiss.IndexFlatIP(sentence_embeddings.shape[1])  # Use inner product (cosine similarity)
