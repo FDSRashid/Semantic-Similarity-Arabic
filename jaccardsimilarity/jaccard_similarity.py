@@ -29,10 +29,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
 
     Args:
-        model_name (str): The name of the pretrained model to use for tokenizing sentences
-        batch_size (int) = 10 : the size of the batches you want to process data by. depends on your computational power, and can be increased
-        scheme (str)  = 'd3tok': The tokenization scheme for the model. This is a list of all the schemes: ['d2tok', 'atbtok', 'd3seg', 'bwtok', 'atbseg', 'd3tok', 'd2seg', 'd1seg', 'd1tok']
-        model_args (Dict) : a dictionary of any other arguements you want to put in the Tokenizer Constructor. Examples are split : True, diac: True. 
+        batch size (int) : the size of the batch you want to manage. 
     Dependencies:
       -transformers
       -Camel-tools
@@ -43,33 +40,31 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       -Arabic-Stopwords
 
     Methods:
-        preprocess(sentence: str) -> str:
+        preprocess(sentence: str) -> list[str]:
             Preprocesses a sentence before encoding.
             
         preprocess_batch(sentences: List[str]) -> List[str]:
           Preprocesses a  batch of sentences before encoding.
 
-        tokenize_sentence(sentence: List[str]) -> List[string]:
-            morphologically tokenizes sentence according to the scheme
 
         jaccard_similarity(tokenized1: List[str], tokenized2: List[str]) -> float :
             finds the jaccard similarity of two tokenized sentences.
 
-        find_most_similar_pair(sentences: List[str], tokenize:bool) -> Tuple[str, str, float]:
+        find_most_similar_pair(sentences: List[str]) -> Tuple[str, str, float]:
             Finds the two most similar sentences from a list of sentences.
 
-        find_n_similar_pair(sentences: List[str], n: int, tokenize:bool) -> List[Tuple[str, str, float]]:
+        find_n_similar_pair(sentences: List[str], n: int) -> List[Tuple[str, str, float]]:
             Finds the n most similar sentences from a list of sentences.
 
-        find_most_similar_sentence(sentences: List[str], sentence: str, tokenize:bool) -> Tuple[str, float, int]:
+        find_most_similar_sentence(sentences: List[str], sentence: str) -> Tuple[str, float, int]:
             Finds the most similar sentence for a input sentence from a list of sentences.
             returns the sentence, the similarity score, and which index of the sentence it returns
             
-        find_most_similar_sentences(sentences: List[str], sentence: str, n: int, tokenize:bool) -> Tuple[list[str], list[float], list[int]]:
+        find_most_similar_sentences(sentences: List[str], sentence: str, n: int) -> Tuple[list[str], list[float], list[int]]:
             Finds the number n of the most similar sentence's for a input sentence from a list of sentences.
             returns a list of sentences, the similarity scores, and which number of the sentence's it returns
 
-        calculate_similarity_matrix(sentences: List[str], tokenize: bool) ->  np.nparray :
+        calculate_similarity_matrix(sentences: List[str]) ->  np.nparray :
           calculates the similarity matrix of a list of sentences, doing pre-processing as well.
           to access the similarity score of the i'th and j'th sentences, find the matrix element at
           [i, j].
@@ -80,14 +75,16 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       self.lemmer = qalsadi.lemmatizer.Lemmatizer()
       self.batch_size = batch_size
     except Exception as e:
-      raise ValueError(f"Failed to initialize model: {e}")
+      raise ValueError(f"Failed to initialize Class: {e}")
   def preprocess(self, sentence):
     """
         Preprocesses a sentence before encoding.
         First, normalize unicode, meaning all varients are a letter are returned to a canonical form. Then normalize alef, alef maksura, and tah marbuta, which
-        is the same idea but for those letters.Finally, vowel marks are removed. This is done becasue it decreases data sparsity. 
+        is the same idea but for those letters.Then, vowel marks are removed. This is done becasue it decreases data sparsity. 
         For further information,
         consult https://camel-tools.readthedocs.io/en/latest/index.html
+        Jaccard Similarity's preprocess function does more than the other preprocessing functions. It then tokenizes the sentence by splitting white space 
+        and punctuation. Finally, it lemmatizes words of a sentence using qalsadi
 
         Args:
             sentence: A string of Arabic Words you wish to pre-process for NLP
@@ -99,7 +96,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -121,9 +118,11 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     """
         Preprocesses a  a batch of sentences before encoding.
         First, normalize unicode, meaning all varients are a letter are returned to a canonical form. Then normalize alef, alef maksura, and tah marbuta, which
-        is the same idea but for those letters.Finally, vowel marks are removed. This is done becasue it decreases data sparsity. 
+        is the same idea but for those letters.Then, vowel marks are removed. This is done becasue it decreases data sparsity. 
         For further information,
         consult https://camel-tools.readthedocs.io/en/latest/index.html
+        Jaccard Similarity's preprocess function does more than the other preprocessing functions. It then tokenizes the sentence by splitting white space 
+        and punctuation. Finally, it lemmatizes words of a sentence using qalsadi
 
         Args:
             sentences: A  List of type string of Arabic Sentences you wish to pre-process for NLP
@@ -135,7 +134,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of preprocess_batch:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.preprocess(" فَسَمِعَ رَجُلا ")
             >>> print(result)
             " فسمع رجلا "
@@ -144,22 +143,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     if not isinstance(sentences, list):
         raise ValueError("Input must be a list of sentences")
 
-    preprocessed_sentences = []
-
-        # Split the sentences into batches
-    for i in range(0, len(sentences), self.batch_size):
-      batch = sentences[i:i + self.batch_size]
-     # Combine the sentences with 'fin' separator
-      combined_sentences = ' fin '.join(batch)
-
-      # Preprocess the combined string
-      preprocessed_text = self.preprocess(combined_sentences)
-
-      # Split the preprocessed text back into sentences using 'fin' as the separator
-      preprocessed_batch = preprocessed_text.split(' fin ')
-
-      preprocessed_sentences.extend(preprocessed_batch)
-
+    preprocessed_sentences = [self.preprocess(i) for i in sentences]
     return preprocessed_sentences
 
   def jaccard_similarity(self, encoded_sentence1, encoded_sentence2):
@@ -180,7 +164,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of calculate_similarity_matrix:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.jaccard_similarity(sentance1, sentence2)
             >>> print(result) 
             .4567
@@ -217,7 +201,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of calculate_similarity_matrix:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.calculate_similarity_matrix([a list of sentences with length 3])
             >>> print(result) #just a example matrix
             [[ 0.          5.19615242 10.39230485]
@@ -265,7 +249,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of find_most_similar_pairs:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.find_most_similar_pairs(sentences, 2)
             >>> print(result)
             "[( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
@@ -321,7 +305,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of find_most_similar_sentence:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.find_most_similar_sentence(sentence, list of sentences)
             >>> print(result)
             " فَسَمِعَ رَجُلا يَقْرَأُ : /4 قُلْ هُوَ اللَّهُ أَحَدٌ سورة الإخلاص آية 1 /4 ، إِلَى آخِرِهَا ، فَقَالَ رَسُولُ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ : "" وَجَبَتْ "" ، فَقُلْتُ : مَاذَا يَا رَسُولَ اللَّهِ ؟ ، فَقَالَ : "" الْجَنَّةُ "" ، قَالَ أَبُو هُرَيْرَةَ : فَأَرَدْتُ أَنْ أَذْهَبَ إِلَى الرَّجُلِ فَأُبَشِّرَهُ ، ثُمَّ خِفْتُ أَنْ يَفُوتَنِي الْغَدَاءُ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ فَآثَرْتُ الْغَدَاءَ مَعَ رَسُولِ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ ، ثُمَّ ذَهَبْتُ إِلَى الرَّجُلِ فَوَجَدْتُهُ قَدْ ذَهَبَ ,
@@ -365,7 +349,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> strings, scores, idxs = model.find_most_similar_sentences(list of sentences, sentence , 2)
             >>> print(len(scores))
             >>> 2
@@ -404,7 +388,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         Example:
             Example usage of encode_sentences:
             
-            >>> model = JaccardSimilarity('calima-msa-r13') #default size of batch is 10
+            >>> model = JaccardSimilarity() #default size of batch is 10
             >>> result = model.find_most_similar_pair(sentences)
             >>> print(result)
             "( لا يُتَوَضَّأُ مِنْ طَعَامٍ أَحَلَّ اللَّهُ أَكْلَهُ ,
