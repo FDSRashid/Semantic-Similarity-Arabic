@@ -47,7 +47,7 @@ For any of the classes that calculate semantic similarity (eg Cosine Similarity)
 
 
 
-preprocess : Preprocess a text of arabic. It unifies all the orthographic varients of a letter, unicode varients, and removes Arabic Vowel Marks. 
+preprocess : Preprocess a text of arabic. It unifies all the orthographic varients of a letter, unicode varients, and removes Arabic Vowel Marks. For Jaccard Similarity, it will lemmatize words as well. 
 
 
 
@@ -128,16 +128,6 @@ The Word Movers Distance metric requires embeddings which map words to vectors -
 
 ## Notes and updates
 
-Important Note: I am intending to implement a class that requires datasets from camel_tools. As of the latest update, Cosine Similarity and Euclidean Distance Classes will not require these datasets. However, to implement jaccard similarity, i am using their models specifically to tokenize arabic words and split words into suffixes and prefixes as well. I've linked their github on instructions to download their data sets. Please follow their instructions strictly - issues that come from the jaccard class 
-pertaining to downloading the camel-tools dataset I can't help with. Note there is different insructions for using the dataset on desktop and on google colab. Consult : https://github.com/CAMeL-Lab/camel_tools for all the needed information.
-
-
-
-As a TLDR  - you can download their datasets using this command line `camel_data -i all`. Then,
-to set the environment variable as per their instructions you can do this shell line: `env CAMELTOOLS_DATA=/path_to/camel_tools` . Note that Colab requires % before the shell, and ! before command lines. 
-
-
-Keep in mind this is downloading data, if you dont want to repeat downloading the same data and wasting space just set the environment variable to the location where you first downloadeded camel_tools. Instructions are better shown on the camel_tools documentation so i strongly recomend going there.
 
 ## Authorship
 Author : Ferdaws Rashid

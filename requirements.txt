@@ -11,3 +11,5 @@ scipy
 gensim
 pot
 tensorflow
+Arabic-Stopwords
+qalsadi

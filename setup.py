@@ -20,7 +20,9 @@ setup(
         'umap-learn',
         'scipy',
         'gensim',
-        'pot'
+        'pot',
+        'qalsadi',
+        'Arabic-Stopwords'
     ],
     python_requires='>=3.7',
 )

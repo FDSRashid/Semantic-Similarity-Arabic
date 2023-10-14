@@ -7,7 +7,6 @@
 """
 from semanticsimilarityarabic.semantic_similarity_arabic import SemanticSimilarityArabic
 import numpy as np
-import torch
 import os
 
 
@@ -17,44 +16,17 @@ from camel_tools.utils.normalize import normalize_alef_maksura_ar
 from camel_tools.utils.normalize import normalize_alef_ar
 from camel_tools.utils.normalize import normalize_teh_marbuta_ar
 from camel_tools.utils.dediac import dediac_ar
-
-#from google.colab import drive
-#drive.mount('/gdrive')
-#os.environ['CAMELTOOLS_DATA'] = '/gdrive/MyDrive/camel_tools'
-#from camel_tools.tokenizers.word import simple_word_tokenize
-#from camel_tools.morphology.database import MorphologyDB
-#from camel_tools.morphology.analyzer import Analyzer
-
-#from camel_tools.morphology.database import MorphologyDB
-#from camel_tools.morphology.generator import Generator
-
 from camel_tools.tokenizers.word import simple_word_tokenize
-from camel_tools.disambig.mle import MLEDisambiguator
+import qalsadi.lemmatizer 
+import arabicstopwords.arabicstopwords as stp
 
-from camel_tools.tokenizers.morphological import MorphologicalTokenizer
 
 
-#from camel_tools.tagger.default import DefaultTagger
-
-#from camel_tools.dialectid import DialectIdentifier
-#from camel_tools.sentiment import SentimentAnalyzer
 
 class JaccardSimilarity(SemanticSimilarityArabic):
   """
     A class for processing and comparing the Jaccard similarity of sentences using Arabic  Models.
     Note: All preproccessing is done for Arabic, so Please use only Arab Texts to use this model.
-    This class uses a morphological tokenizer, if you desire. for the similarity functions, there is a bool variable to specify
-    wether you want to use it.
-
-
-    VERY IMPORTANT: DOWNLOAD CAMEL TOOLS DATA FROM CAMEL TOOLS AND SET A ENVIRONMENTAL VARIABLE
-    LIKE THIS os.environ['CAMELTOOLS_DATA'] = location of camel_tools folder
-    THis is for the tokenization function I use in this class. this class will not instantiate 
-    unless you have this environment variable. Consult https://github.com/CAMeL-Lab/camel_tools 
-    For specific instructions. Note, Google Colab has slightly different instructions. Check this link
-    for the instructions there https://colab.research.google.com/drive/1Y3qCbD6Gw1KEw-lixQx1rI6WlyWnrnDS?usp=sharing .
-    
-    Since we are using Camel-Tools pretrained models, we need one of their models to use to instantiate a instance of this class. An example of this is 'calima-msa-r13'
 
     Args:
         model_name (str): The name of the pretrained model to use for tokenizing sentences
@@ -67,6 +39,8 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       -torch
       -numpy
       -sci-kit learn
+      -qalsadi
+      -Arabic-Stopwords
 
     Methods:
         preprocess(sentence: str) -> str:
@@ -101,13 +75,9 @@ class JaccardSimilarity(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, model_name,  schemes='d3tok', batch_size = 10, model_args = {'split': True}):
-    if 'CAMELTOOLS_DATA' not in os.environ:
-       raise ValueError('CAMELTOOLS_DATA is not set. Please follow documentation instructions to download data and set environmental variable')
+  def __init__(self, batch_size = 10):
     try:
-      self.mle = MLEDisambiguator.pretrained(model_name)
-      self.model_args = model_args
-      self.tokenizer = MorphologicalTokenizer(self.mle, scheme=schemes, **(model_args or {}))
+      self.lemmer = qalsadi.lemmatizer.Lemmatizer()
       self.batch_size = batch_size
     except Exception as e:
       raise ValueError(f"Failed to initialize model: {e}")
@@ -124,7 +94,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
             
 
         Returns:
-            sentence (string), a string with proper formatting
+            sentence (list[string]), the preprocessed sentence as a list. 
 
         Example:
             Example usage of preprocess:
@@ -142,6 +112,8 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     sentence = normalize_alef_maksura_ar(sentence)
     sentence = normalize_teh_marbuta_ar(sentence)
     sentence = dediac_ar(sentence)
+    sentence = simple_word_tokenize(sentence)
+    sentence = [self.lemmer.lemmatize(i) for i in sentence]
     return sentence
 
 
@@ -189,9 +161,6 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       preprocessed_sentences.extend(preprocessed_batch)
 
     return preprocessed_sentences
-  
-  def tokenize_sentence(self, sentence):
-     return self.tokenizer.tokenize(simple_word_tokenize(sentence))
 
   def jaccard_similarity(self, encoded_sentence1, encoded_sentence2):
      """
@@ -229,7 +198,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
 
 
-  def calculate_similarity_matrix(self, sentences, tokenize = True):
+  def calculate_similarity_matrix(self, sentences):
     """
 
     This finds the Jaccard Similarity matrix of a list of sentences. Jaccardian Similarity is defined by the size of the intersection of two sets divided by the size
@@ -263,8 +232,6 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         # Preprocess and encode all sentences
     num_sentences = len(sentences)
     sentences = self.preprocess_batch(sentences)
-    if tokenize:
-        sentences = [self.tokenize_sentence(i) for i in sentences]
     similarity_matrix = np.zeros((num_sentences, num_sentences))
     for i in range(num_sentences):
         for j in range(num_sentences):
@@ -275,7 +242,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     return similarity_matrix
 
 
-  def find_most_similar_pairs(self, sentences, n, tokenize = True):
+  def find_most_similar_pairs(self, sentences, n):
       """
 
     This finds a specified number of the most similar pairs using Jaccardian Distance.
@@ -311,7 +278,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         raise ValueError("Input must be a list of at least two sentences")
 
         # Preprocess and encode all sentences
-      similarity_matrix = self.calculate_similarity_matrix(sentences, tokenize)
+      similarity_matrix = self.calculate_similarity_matrix(sentences)
       num_sentences = len(sentences)
 
         # Flatten the upper triangular part of the matrix (excluding the diagonal)
@@ -332,7 +299,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       
       return top_n_pairs
 
-  def find_most_similar_sentence(self, sentences, sentence, tokenize = True):
+  def find_most_similar_sentence(self, sentences, sentence):
 
     """
 
@@ -366,13 +333,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
         # Preprocess and encode all sentences
     sentence = self.preprocess(sentence)
-    if tokenize:
-       sentence = self.tokenize_sentence(sentence)
     sentences1 = self.preprocess_batch(sentences)
-    if tokenize:
-       sentences1 = [self.tokenize_sentence(i) for i in sentences1]
-    
-
     # Calculate Jaccard similarity between input sentence and all sentences in the list
     similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences1]
     most_similar_index = np.argmax(similarity_scores)
@@ -382,7 +343,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
 
 
 
-  def find_most_similar_sentences(self, sentences, sentence, n = 2, tokenize = True):
+  def find_most_similar_sentences(self, sentences, sentence, n = 2):
       """
 
     This finds  the most similasr sentence from a list of sentances. You input a sentance to co
@@ -395,7 +356,6 @@ class JaccardSimilarity(SemanticSimilarityArabic):
             sentences: A List of Strings that are the sentances you wish to find the similarity for.
             sentence: a single string that is the sentance you want to compare the list to.
             n: the number of the most similar_sentences to return
-            tokenized: either True or false, wether you want to tokenize sentences or not.
             
 
         Returns:
@@ -414,11 +374,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       if len(sentences) < 2:
           raise ValueError('List of Sentences needs to be at least 2!')
       sentence = self.preprocess(sentence)
-      if tokenize:
-         sentence = self.tokenize_sentence(sentence)
       sentences1 = self.preprocess_batch(sentences)
-      if tokenize:
-        sentences1 = [self.tokenize_sentence(i) for i in sentences1]
       similarity_scores = [self.jaccard_similarity(sentence, i) for i in sentences1]
       top_n_indices = np.argpartition(similarity_scores, n)[-n:]
       top_n_scores = [similarity_scores[idx] for idx in top_n_indices]
@@ -429,7 +385,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
       return top_n_sentences, top_n_scores, top_n_indices
 
     
-  def find_most_similar_pair(self, sentences, tokenized = True):
+  def find_most_similar_pair(self, sentences):
       """
 
     This finds the most similar pairs using Jaccardian Similarity.
@@ -457,6 +413,6 @@ class JaccardSimilarity(SemanticSimilarityArabic):
  )"
         """ 
       
-      sim_sentance = self.find_most_similar_pairs(sentences, 1, tokenize = tokenized)
+      sim_sentance = self.find_most_similar_pairs(sentences, 1)
       return sim_sentance[0]
 
