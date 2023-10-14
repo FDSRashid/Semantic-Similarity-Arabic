@@ -70,10 +70,9 @@ class JaccardSimilarity(SemanticSimilarityArabic):
           [i, j].
 
   """
-  def __init__(self, batch_size = 10):
+  def __init__(self):
     try:
       self.lemmer = qalsadi.lemmatizer.Lemmatizer()
-      self.batch_size = batch_size
     except Exception as e:
       raise ValueError(f"Failed to initialize Class: {e}")
   def preprocess(self, sentence):
@@ -84,7 +83,7 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         For further information,
         consult https://camel-tools.readthedocs.io/en/latest/index.html
         Jaccard Similarity's preprocess function does more than the other preprocessing functions. It then tokenizes the sentence by splitting white space 
-        and punctuation. Finally, it lemmatizes words of a sentence using qalsadi
+        and punctuation. then, it lemmatizes words of a sentence using qalsadi. finally, it removes stop words from the sentence list and returns the list of words. 
 
         Args:
             sentence: A string of Arabic Words you wish to pre-process for NLP
@@ -111,7 +110,8 @@ class JaccardSimilarity(SemanticSimilarityArabic):
     sentence = dediac_ar(sentence)
     sentence = simple_word_tokenize(sentence)
     sentence = [self.lemmer.lemmatize(i) for i in sentence]
-    return sentence
+    mask = [i for i in sentence if not stp.is_stop(i)]
+    return mask
 
 
   def preprocess_batch(self, sentences):
@@ -122,7 +122,9 @@ class JaccardSimilarity(SemanticSimilarityArabic):
         For further information,
         consult https://camel-tools.readthedocs.io/en/latest/index.html
         Jaccard Similarity's preprocess function does more than the other preprocessing functions. It then tokenizes the sentence by splitting white space 
-        and punctuation. Finally, it lemmatizes words of a sentence using qalsadi
+        and punctuation.
+        then, it lemmatizes words of a sentence using qalsadi. 
+        finally, it removes stop words from the sentence list and returns the list of words. 
 
         Args:
             sentences: A  List of type string of Arabic Sentences you wish to pre-process for NLP
