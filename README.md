@@ -92,11 +92,11 @@ Our first embedding metric is Cosine Similarity. Cosine Similarity is the measur
 The second embedding metric is Euclidean Distance. While still working with vectors to represent the texts, Eucldean distance is simply the distance of two vectors in n-dimensional space: $$d(A, B) = || A -B ||$$
 
 
-Theres no normilization done - the previous metric, COsine Similarity, had normalizing done by dividing by the norm of A times norm B. 
+Theres no normilization done - the previous metric, Cosine Similarity, had normalizing done by dividing by the norm of A times norm B. 
 
 
-The third metric is Jaccard Similarity. To use Jaccard Similarity, I use camel-tools's morphological tokenizer. This function breaks down sentences in arabic into individual words, but also split prefixes, stems, and suffixes according to Arabic Morphological rules. 
-Speakers of Arabic know that arabic has different word forms, and complicated system of prefixes and suffixes. This is important because Jaccard Similarity is based on a set of elements, not a numerical vector like the previous two. In our case, each element will be the element of the tokenized sentence, also separating prefixes and suffixes. My intent is to make Jaccard Similarity as accurate as possible for the given arabic text. The Jaccard Similarity is a straight forward formula - its defined as the size of the intersection of two sets divided by the size of the union of two sets : $$J(A, B) = \frac{|A \cap  B|}{| A \cup B |}$$ 
+The third metric is Jaccard Similarity. To use Jaccard Similarity, I use PyArabic to lemmatize texts, and remove stop words. 
+Speakers of Arabic know that arabic has different word forms, and complicated system of prefixes and suffixes. This is important because Jaccard Similarity is based on a set of elements, not a numerical vector like the previous two. In our case, each element will be the word, lemmatized and preprocessed. My intent is to make Jaccard Similarity as accurate as possible for the given arabic text. The Jaccard Similarity is a straight forward formula - its defined as the size of the intersection of two sets divided by the size of the union of two sets : $$J(A, B) = \frac{|A \cap  B|}{| A \cup B |}$$ 
 
 
 Intersection is the elements present in A and B, Union is the elements present in either A or B. 

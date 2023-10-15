@@ -13,6 +13,8 @@ from camel_tools.utils.dediac import dediac_ar
 from camel_tools.tokenizers.word import simple_word_tokenize
 from tensorflow.python.ops.numpy_ops import np_config
 import warnings
+import qalsadi.lemmatizer 
+import arabicstopwords.arabicstopwords as stp
 
 
 
@@ -70,7 +72,7 @@ class WordMoversDistance(SemanticSimilarityArabic):
         self.model_dir = model_dir
         self.model_path = os.path.join(self.model_dir, f"{model_name}.mdl")
         self.batch_size = batch_size
-        
+        self.lemmer = qalsadi.lemmatizer.Lemmatizer()
         
         
         # Check if the model file exists; if not, download and unzip it
@@ -171,23 +173,11 @@ class WordMoversDistance(SemanticSimilarityArabic):
         # If a single sentence is provided, wrap it in a list for consistency
           sentences = [sentences]
 
-        preprocessed_sentences = []
-
-        # Split the sentences into batches
-        for i in range(0, len(sentences), self.batch_size):
-          batch = sentences[i:i + self.batch_size]
-         # Combine the sentences with 'fin' separator
-          combined_sentences = ' fin '.join(batch)
-
-          # Preprocess the combined string
-          preprocessed_text = self.preprocess(combined_sentences)
-
-      # Split the preprocessed text back into sentences using 'fin' as the separator
-          preprocessed_batch = preprocessed_text.split(' fin ')
-
-          preprocessed_sentences.extend(preprocessed_batch)
-
+        preprocessed_sentences = [self.preprocess(i) for i in sentences]
         return preprocessed_sentences
+
+
+
     def tokenize(self, sentence):
         """
         Tokenizes a sentence into words.
@@ -198,7 +188,11 @@ class WordMoversDistance(SemanticSimilarityArabic):
         Returns:
             tokens (list): A list of Arabic word tokens.
         """
-        return simple_word_tokenize(sentence)
+        sent = simple_word_tokenize(sentence)
+        lemmed = [self.lemmer.lemmatize(i) for i in sent]
+        mask = [i for i in lemmed if not stp.is_stop(i)]
+        return mask
+
     def word_movers_distance(self, text1, text2):
         """
         Calculates the semantic similarity between two Arabic texts using Word Movers Distance (WMD).
