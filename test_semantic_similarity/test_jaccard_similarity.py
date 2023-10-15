@@ -11,10 +11,10 @@ def jaccard_similarity_instance():
 
 # Test the preprocess method
 def test_preprocess(jaccard_similarity_instance):
-    input_sentence = " فَسَمِعَ رَجُلا "
-    expected_output = " فسمع رجلا "
+    input_sentence = "أَنَا أُحِبّ تَعْلِم اللُغَات."
+    expected_output = ['انا', 'حبا', 'تعلم', 'لغة', '.']
     result = jaccard_similarity_instance.preprocess(input_sentence)
-    assert 1 == 1
+    assert expected_output == result
 
 
 
