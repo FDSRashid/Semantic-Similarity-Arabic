@@ -1,5 +1,5 @@
 ﻿camel-tools==1.5.2
-transformers==4.30.2
+transformers==4.34.0
 scikit-learn==1.2.2
 torch==2.1.0
 numpy==1.23.5
