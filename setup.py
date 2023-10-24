@@ -24,7 +24,7 @@ setup(
         'qalsadi',
         'Arabic-Stopwords'
     ],
-    python_requires='>=3.10',
+    python_requires='>=3.8',
 )
 
 
