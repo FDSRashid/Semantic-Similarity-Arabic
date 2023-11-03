@@ -19,6 +19,7 @@ from camel_tools.utils.normalize import normalize_teh_marbuta_ar
 from camel_tools.utils.dediac import dediac_ar
 from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
+import torch.nn.functional as F
 #from google.colab import drive
 #drive.mount('/gdrive')
 #os.environ['CAMELTOOLS_DATA'] = '/gdrive/MyDrive/camel_tools'
@@ -199,6 +200,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
       preprocessed_sentences.extend(preprocessed_batch)
 
     return preprocessed_sentences
+  def mean_pooling(self, model_output, attention_mask):
+    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
   
   def embed_sentence(self, sentence):
        
@@ -245,9 +250,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
           chunk = {key: value.to('cuda') for key, value in chunk.items()}
         with torch.no_grad():
           output = self.model(**chunk)
-        cls_representation = output.last_hidden_state[:, 0, :]
-        cls_representation = cls_representation.to('cpu')
-        encoded_embeddings.append(cls_representation)
+        text_embedding = self.mean_pooling(output, chunk['attention_mask'])
+        text_embedding = text_embedding.to('cpu')
+        sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
+        encoded_embeddings.append(sentence_embeddings)
       else:
           # Truncate the sentence into chunks and process them separately
           
@@ -267,10 +273,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
           if j == 0:
               accumulated_embedding = torch.zeros(
               (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
-          cls_representation = output.last_hidden_state[:, 0, :]
-          cls_representation = cls_representation.to('cpu')
-          accumulated_embedding += cls_representation
-          
+          text_embedding = self.mean_pooling(output, chunk['attention_mask'])
+          text_embedding = text_embedding.to('cpu')
+          sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
+          accumulated_embedding += sentence_embeddings
+        accumulated_embedding = F.normalize(accumulated_embedding, p=2, dim=1)  
         encoded_embeddings.append(accumulated_embedding)
           
 
@@ -328,9 +335,10 @@ class CosineSimilarity(SemanticSimilarityArabic):
             chunk = {key: value.to('cuda') for key, value in chunk.items()}
           with torch.no_grad():
             output = self.model(**chunk)
-          cls_representation = output.last_hidden_state[:, 0, :]
-          cls_representation = cls_representation.to('cpu')
-          encoded_embeddings.append(cls_representation)
+          text_embedding = self.mean_pooling(output, chunk['attention_mask'])
+          text_embedding = text_embedding.to('cpu')
+          sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
+          encoded_embeddings.append(sentence_embeddings)
         else:
           # Truncate the sentence into chunks and process them separately
           
@@ -350,10 +358,11 @@ class CosineSimilarity(SemanticSimilarityArabic):
             if j == 0:
                accumulated_embedding = torch.zeros(
                 (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
-            cls_representation = output.last_hidden_state[:, 0, :]
-            cls_representation = cls_representation.to('cpu')
-            accumulated_embedding += cls_representation
-          
+            text_embedding = self.mean_pooling(output, chunk['attention_mask'])
+            text_embedding = text_embedding.to('cpu')
+            sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
+            accumulated_embedding += sentence_embeddings
+          accumulated_embedding = F.normalize(accumulated_embedding, p=2, dim=1)  
           encoded_embeddings.append(accumulated_embedding)
           
 
