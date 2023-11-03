@@ -18,6 +18,7 @@ from camel_tools.utils.normalize import normalize_teh_marbuta_ar
 from camel_tools.utils.dediac import dediac_ar
 from transformers import AutoTokenizer, AutoModel
 from scipy.stats import entropy
+import torch.nn.functional as F
 #from google.colab import drive
 #drive.mount('/gdrive')
 #os.environ['CAMELTOOLS_DATA'] = '/gdrive/MyDrive/camel_tools'
@@ -204,6 +205,10 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
       preprocessed_sentences.extend(preprocessed_batch)
 
     return preprocessed_sentences
+  def mean_pooling(self, model_output, attention_mask):
+    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
   def encode_sentences(self, sentences):
         # Preprocess all sentences in a batch
@@ -253,13 +258,15 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
           with torch.no_grad():
             output = self.model(**chunk)
           
-          cls_representation = output.last_hidden_state[:, 0, :]
-          cls_representation = cls_representation.to('cpu')
-          encoded_embeddings.append(cls_representation)
+          text_embedding = self.mean_pooling(output, chunk['attention_mask'])
+          text_embedding = text_embedding.to('cpu')
+          sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
+          encoded_embeddings.append(sentence_embeddings)
         else:
           # Truncate the sentence into chunks and process them separately
-          
+          count = 0
           for j in range(0, input_ids.shape[1], max_sequence_length):
+            count+=1
             chunk_input_ids = input_ids[:, j:j + max_sequence_length]
             chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
             chunk_token_type_ids = token_type_ids[:, j:j + max_sequence_length]
@@ -275,9 +282,13 @@ class JensenShannonDivergence(SemanticSimilarityArabic):
             if j == 0:
                accumulated_embedding = torch.zeros(
                 (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
-            cls_representation = output.last_hidden_state[:, 0, :]
-            cls_representation = cls_representation.to('cpu')
-            accumulated_embedding += cls_representation
+            text_embedding = self.mean_pooling(output, chunk['attention_mask'])
+            text_embedding = text_embedding.to('cpu')
+            sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
+            accumulated_embedding += sentence_embeddings
+          accumulated_embedding= accumulated_embedding/count
+          accumulated_embedding = F.normalize(accumulated_embedding, p=2, dim=1)  
+          encoded_embeddings.append(accumulated_embedding)
           
           encoded_embeddings.append(accumulated_embedding)
           
