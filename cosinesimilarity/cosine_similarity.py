@@ -256,8 +256,9 @@ class CosineSimilarity(SemanticSimilarityArabic):
         encoded_embeddings.append(sentence_embeddings)
       else:
           # Truncate the sentence into chunks and process them separately
-          
+        count = 0  
         for j in range(0, input_ids.shape[1], max_sequence_length):
+          count+=1
           chunk_input_ids = input_ids[:, j:j + max_sequence_length]
           chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
           chunk_token_type_ids = token_type_ids[:, j:j + max_sequence_length]
@@ -277,6 +278,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
           text_embedding = text_embedding.to('cpu')
           sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
           accumulated_embedding += sentence_embeddings
+        accumulated_embedding = accumulated_embedding/count
         accumulated_embedding = F.normalize(accumulated_embedding, p=2, dim=1)  
         encoded_embeddings.append(accumulated_embedding)
           
@@ -341,8 +343,9 @@ class CosineSimilarity(SemanticSimilarityArabic):
           encoded_embeddings.append(sentence_embeddings)
         else:
           # Truncate the sentence into chunks and process them separately
-          
+          count = 0
           for j in range(0, input_ids.shape[1], max_sequence_length):
+            count+=1
             chunk_input_ids = input_ids[:, j:j + max_sequence_length]
             chunk_attention_mask = attention_mask[:, j:j + max_sequence_length]
             chunk_token_type_ids = token_type_ids[:, j:j + max_sequence_length]
@@ -362,6 +365,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             text_embedding = text_embedding.to('cpu')
             sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
             accumulated_embedding += sentence_embeddings
+          accumulated_embedding = accumulated_embedding/count 
           accumulated_embedding = F.normalize(accumulated_embedding, p=2, dim=1)  
           encoded_embeddings.append(accumulated_embedding)
           
