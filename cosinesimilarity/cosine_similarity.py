@@ -252,7 +252,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
           output = self.model(**chunk)
         text_embedding = self.mean_pooling(output, chunk['attention_mask'])
         text_embedding = text_embedding.to('cpu')
-        encoded_embeddings.append(sentence_embeddings)
+        encoded_embeddings.append(text_embedding)
       else:
           # Truncate the sentence into chunks and process them separately
         count = 0  
@@ -336,7 +336,7 @@ class CosineSimilarity(SemanticSimilarityArabic):
             output = self.model(**chunk)
           text_embedding = self.mean_pooling(output, chunk['attention_mask'])
           text_embedding = text_embedding.to('cpu')
-          encoded_embeddings.append(sentence_embeddings)
+          encoded_embeddings.append(text_embedding)
         else:
           # Truncate the sentence into chunks and process them separately
           count = 0
