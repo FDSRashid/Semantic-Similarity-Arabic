@@ -363,8 +363,8 @@ class CosineSimilarity(SemanticSimilarityArabic):
                 (1, output.last_hidden_state.size(-1)), dtype=torch.float32)
             text_embedding = self.mean_pooling(output, chunk['attention_mask'])
             text_embedding = text_embedding.to('cpu')
-            sentence_embeddings = F.normalize(text_embedding, p=2, dim=1)
-            accumulated_embedding += sentence_embeddings
+
+            accumulated_embedding += text_embedding
           accumulated_embedding = accumulated_embedding/count 
           accumulated_embedding = F.normalize(accumulated_embedding, p=2, dim=1)  
           encoded_embeddings.append(accumulated_embedding)
